@@ -1,11 +1,11 @@
 from flask import Flask, request
 import postgresqlite
 from sqlalchemy.orm import registry
-from models import db, Chore, Resident
+from models import db, Chore, Resident, Household
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 import json
-
+import functools
 from dotenv import dotenv_values
 import jwt
 
@@ -47,7 +47,8 @@ CHORES_LIST = [
 
 
 def auth_jtw(func):
-    def wrapper(*args, **kwargs):   # noqa: ARG001
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
         token = request.headers.get('Authorization').split(': ')[1]
 
         if not token:
@@ -63,7 +64,7 @@ def auth_jtw(func):
         if not existing_user:
             return {'error': 'No token or invalid token was provided.'}, 403
 
-        return func()
+        return func(*args, user=existing_user, **kwargs)
 
     return wrapper
 
@@ -113,21 +114,61 @@ def register():
 
 @app.route('/user/household', methods=['GET'])
 @auth_jtw
-def get_household():
-    token = request.headers.get('Authorization').split(': ')[1]
-
-    decoded = jwt.decode(token, key=config['secretKey'], algorithms=['HS256'])
-
-    user = db.session.query(Resident).filter(Resident.id == decoded['user_id']).first()
-    print(user.household)
-
-    household = user.household
-
-    if not household:
+def get_household(**kwargs):
+    user = kwargs.get('user')
+    if not user:
+        return {'error': 'internal server error'}, 503
+    
+    if not user.household:
         return {'household': None}
     
     return {'household': user.household.to_dict()}
     
+
+@app.route('/household/create', methods=["POST"])
+@auth_jtw
+def create_household(**kwargs):
+    user = kwargs.get('user')
+
+    if not user:
+        return {'error': 'internal server error'}, 503
+
+    req_body = json.loads(request.data.decode())
+
+    if not req_body['name'] or not req_body['password']:
+        return {'error': 'Name and password required'}
+
+    hashed_password = bcrypt.generate_password_hash(req_body['password']).decode('utf-8')
+
+    household = Household(name=req_body['name'], password=hashed_password)
+    db.session.add(household)
+    db.session.commit()
+
+    user.household_id = household.id
+
+    db.session.commit()
+
+    return {
+        'status': 'ok',
+        'household': household.to_dict(),
+    }
+
+
+@app.route('/user/household', methods=['POST'])
+@auth_jtw
+def associate_household(**kwargs):
+    user = kwargs.get('user')
+
+    if not user:
+        return {'error': 'internal server error'}, 503
+
+    req_body = json.loads(request.data.decode())
+
+    # compare household password with submitted password
+    # if all checks out mark resident.household_id = household.id
+
+    return {'stats': 'valid endpoint g'}
+
 
 def insert_chores(_list):
     for description, big_job in _list:
