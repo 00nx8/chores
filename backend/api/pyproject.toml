@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.1.0"
+flask-sqlalchemy = "^3.1.1"
+sqlalchemy = "^2.0.36"
+flask-script = "^2.0.6"
+flask-cors = "^5.0.1"
+flask-bcrypt = "^1.0.1"
+pgcli = "^4.3.0"
+postgresqlite = "^0.4.8"
+dotenv = "^0.9.9"
+pyjwt = "^2.10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
