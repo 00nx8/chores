@@ -5,7 +5,6 @@ export async function userRequest(url: string, obj: {[key: string]: string | {[k
     'Accept': "application/json",
     'Content-Type': "application/json"
   }
-
   const token = Cookies.get('token')
 
   if (token) {

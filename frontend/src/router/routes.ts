@@ -23,6 +23,16 @@ const routes: RouteRecordRaw[] = [
         name: 'household',
         path: '/household',
         component: () => import('pages/HouseholdPage.vue')
+      },
+      {
+        name: 'createHouse',
+        path: '/household/create',
+        component: () => import('pages/CreateHouse.vue')
+      },
+      {
+        name: 'joinHouse',
+        path: '/household/join',
+        component: () => import('pages/JoinHouse.vue')
       }
     ],
   },

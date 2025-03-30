@@ -19,6 +19,8 @@ coverage
 
 /backend/api/__pycache__
 /backend/api/.venv
+/backend/api/.env
+
 /backend/api/data
 
 /frontend/chores/.vscode

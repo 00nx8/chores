@@ -23,7 +23,7 @@ function verifyLoginDetails() {
     return
   }
 
-  userRequest('/login', {
+  userRequest('/user/household', {
     method: 'POST',
     body: JSON.stringify({
       username: username.value,
@@ -42,10 +42,10 @@ function verifyLoginDetails() {
 
 <template>
   <section style="height: 100dvh" class="column justify-center items-center">
-    <h1 style="margin: 0">login</h1>
+    <h1 class="text-h5" style="margin: 0">Join household</h1>
 
     <form class="q-gutter-md" @submit.prevent="verifyLoginDetails">
-      <q-input filled v-model="username" label="Username" />
+      <q-input filled v-model="username" label="Household name" />
       <q-input label="Password"  v-model="password" filled :type="isPwd ? 'password' : 'text'">
           <template v-slot:append>
             <q-icon
@@ -62,17 +62,9 @@ function verifyLoginDetails() {
 
         <div class="row justify-end q-gutter-md">
           <q-btn
-            :to="{name: 'register'}"
-            label="Register"
-            class="q-mt-md"
-
-          >
-          </q-btn>
-
-          <q-btn
             type="submit"
             :loading="submitting"
-            label="Log in"
+            label="Join"
             class="q-mt-md"
             color="teal"
           >
