@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 
 db = SQLAlchemy()
 
+
 class Household(db.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String, nullable=False)
@@ -20,6 +21,7 @@ class Household(db.Model):
             'name': self.name,
         }
 
+
 class Resident(db.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String, nullable=False)
@@ -34,7 +36,6 @@ class Resident(db.Model):
     household = relationship('Household', back_populates='resident')
     household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id'), nullable=True)
 
-    
     def to_dict(self):
         return {
             'id': self.id,
@@ -42,6 +43,7 @@ class Resident(db.Model):
             'household_id': self.household_id
         }
     
+
 class Chore(db.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     description = sa.Column(sa.String, nullable=False)
