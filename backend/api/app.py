@@ -27,26 +27,25 @@ mapper_registry.configure()
 
 config = dotenv_values('.env')
 
-
 CHORES_LIST = [
-        ('Vacuum', False),
-        ('Clean the Toilet', False),
-        ('Mop the floor', False),
-        ('Clean the Fridge', True),
-        ('Kitchen sink', False),
-        ('Take out the bins', False),
-        ('Clean the stove', False),
-        ('Wipe kitchen counter', False),
-        ('Clean the shelf/sink in the shower', False),
-        ('Shower Gutter', False),
-        ('Wipe off the bar', False),
-        ('Wipe off coffee tables,', False),
-        ('Beat the carpets', True),
-        ('Clear belongings out of communal areas', False),
+    ('Vacuum', False),
+    ('Clean the Toilet', False),
+    ('Mop the floor', False),
+    ('Clean the Fridge', True),
+    ('Kitchen sink', False),
+    ('Take out the bins', False),
+    ('Clean the stove', False),
+    ('Wipe kitchen counter', False),
+    ('Clean the shelf/sink in the shower', False),
+    ('Shower Gutter', False),
+    ('Wipe off the bar', False),
+    ('Wipe off coffee tables,', False),
+    ('Beat the carpets', True),
+    ('Clear belongings out of communal areas', False),
 ]
 
 
-def auth_jtw(func):
+def auth_jwt(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         token = request.headers.get('Authorization').split(': ')[1]
@@ -113,7 +112,7 @@ def register():
 
 
 @app.route('/user/household', methods=['GET'])
-@auth_jtw
+@auth_jwt
 def get_household(**kwargs):
     user = kwargs.get('user')
     if not user:
@@ -126,7 +125,7 @@ def get_household(**kwargs):
     
 
 @app.route('/household/create', methods=["POST"])
-@auth_jtw
+@auth_jwt
 def create_household(**kwargs):
     user = kwargs.get('user')
 
@@ -136,7 +135,12 @@ def create_household(**kwargs):
     req_body = json.loads(request.data.decode())
 
     if not req_body['name'] or not req_body['password']:
-        return {'error': 'Name and password required'}
+        return {'error': 'Name and password required'}, 403
+
+    existing_household = db.session.query(Household).filter(Household.name == req_body['name']).first()
+
+    if existing_household:
+        return {'error': 'Household exists with that name. Repeat household names will be introduced later.'}, 403
 
     hashed_password = bcrypt.generate_password_hash(req_body['password']).decode('utf-8')
 
@@ -155,7 +159,7 @@ def create_household(**kwargs):
 
 
 @app.route('/user/household', methods=['POST'])
-@auth_jtw
+@auth_jwt
 def associate_household(**kwargs):
     user = kwargs.get('user')
 
@@ -164,10 +168,20 @@ def associate_household(**kwargs):
 
     req_body = json.loads(request.data.decode())
 
-    # compare household password with submitted password
-    # if all checks out mark resident.household_id = household.id
+    household = db.session.query(Household).filter(Household.name == req_body['householdName']).first()
 
-    return {'stats': 'valid endpoint g'}
+    if not bcrypt.check_password_hash(household.password, req_body['password']):
+        return {'error': 'Household doesn\'t exist or incorrect password'}, 403
+
+    user.household_id = household.id
+
+    db.session.commit()
+
+    return {'status': 'ok',
+            'user': user.to_dict(),
+            # myb ill need it idk
+            # 'household': household.to_dict()
+        }
 
 
 def insert_chores(_list):

@@ -13,6 +13,11 @@ export async function userRequest(url: string, obj: {[key: string]: string | {[k
 
   const res =  await fetch(`http://localhost:5000${url}`, obj)
   const data = await res.json()
+
+  if (data.error && data.error == 'No token or invalid token was provided.') {
+    Cookies.remove('token')
+  }
+
   return data
 }
 

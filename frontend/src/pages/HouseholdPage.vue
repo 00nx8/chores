@@ -11,8 +11,8 @@ userRequest('/user/household', {
 }).then(data => {
   if (!data.household) {
     console.log('homeless')
+    hasHousehold.value = false
   }
-  hasHousehold.value = false
 })
 
 </script>

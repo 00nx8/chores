@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { userRequest } from 'src/components/userRequest';
-import { Cookies } from 'quasar';
 import { useRouter } from 'vue-router';
 
 const router = useRouter()
@@ -9,7 +8,7 @@ const router = useRouter()
 const isPwd = ref(true)
 const submitting = ref(false)
 
-const username = ref('')
+const householdName = ref('')
 const password = ref('')
 
 const error = ref('')
@@ -17,7 +16,7 @@ const error = ref('')
 function verifyLoginDetails() {
   submitting.value = true
 
-  if (!username.value || !password.value) {
+  if (!householdName.value || !password.value) {
     error.value = 'Username and password are required'
     submitting.value = false
     return
@@ -26,18 +25,16 @@ function verifyLoginDetails() {
   userRequest('/user/household', {
     method: 'POST',
     body: JSON.stringify({
-      username: username.value,
+      householdName: householdName.value,
       password: password.value
     })
   }).then(res => {
-    if (res.token) {
-      Cookies.set('token', res.token)
+    if (res.user) {
       router.push('/household').catch(err => console.log(err))
     }
   }).catch(err => error.value = err.message)
   submitting.value = false
 }
-
 </script>
 
 <template>
@@ -45,7 +42,7 @@ function verifyLoginDetails() {
     <h1 class="text-h5" style="margin: 0">Join household</h1>
 
     <form class="q-gutter-md" @submit.prevent="verifyLoginDetails">
-      <q-input filled v-model="username" label="Household name" />
+      <q-input filled v-model="householdName" label="Household name" />
       <q-input label="Password"  v-model="password" filled :type="isPwd ? 'password' : 'text'">
           <template v-slot:append>
             <q-icon
