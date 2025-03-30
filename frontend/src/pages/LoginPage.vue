@@ -32,6 +32,7 @@ function verifyLoginDetails() {
   }).then(res => {
     if (res.token) {
       Cookies.set('token', res.token)
+      localStorage.setItem('username', username.value)
       router.push('/household').catch(err => console.log(err))
     }
   }).catch(err => error.value = err.message)

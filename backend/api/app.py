@@ -8,13 +8,23 @@ import json
 import functools
 from dotenv import dotenv_values
 import jwt
+from datetime import datetime
+
+# TODO:
+# create house overview
+    # Filter chores based on done/todo
+    # maybe introduce filters to the query being sent
+    # (/household/<int:household_id>/chore/<status>)
+    # then the query can be
+# create profile page
+
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = postgresqlite.get_uri()
-app.config['SECRET_KEY'] = 'MEGA super duper secret key'
+app.config['SECRET  _KEY'] = 'MEGA super duper secret key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.debug = True
@@ -43,6 +53,13 @@ CHORES_LIST = [
     ('Beat the carpets', True),
     ('Clear belongings out of communal areas', False),
 ]
+
+
+def insert_chores(_list):
+    for description, big_job in _list:
+        db.session.add(Chore(description=description, is_big_job=big_job, household_id=4))
+
+    db.session.commit()
 
 
 def auth_jwt(func):
@@ -124,6 +141,44 @@ def get_household(**kwargs):
     return {'household': user.household.to_dict()}
     
 
+@app.route('/chore/<int:chore_id>', methods=['POST'])
+@auth_jwt
+def mark_chore_done(chore_id, **kwargs):
+    chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
+    chore.is_done = True
+    chore.done_on = datetime.today().strftime('%Y-%m-%d')
+    db.session.commit()
+    return {'status': 'ok', 'chore': chore.to_dict()}
+
+
+@app.route('/household/<int:household_id>/chore/', defaults={'status': None}, methods=["GET"])
+@app.route('/household/<int:household_id>/chore/<status>', methods=["GET"])
+@auth_jwt
+def get_chores(household_id, status, **kwargs):
+    user = kwargs.get('user')
+
+    if not user:
+        return {'error': "internal server error"}, 503
+    # TODO:
+    # figure something out here i have no clue i need sleep
+    
+    if status is None:
+        chores = db.session.query(Chore).filter(
+            Chore.household_id == household_id and
+            Chore.resident_id == user.id
+            ).all()
+    elif status == 'done':
+        status = True
+    else:
+        status = False
+    chores = db.session.query(Chore).filter(
+        Chore.household_id == household_id and
+        Chore.resident_id == user.id and
+        Chore.is_done == status
+        ).all()
+    return {'chores': [chore.to_dict() for chore in chores]}
+
+
 @app.route('/household/create', methods=["POST"])
 @auth_jwt
 def create_household(**kwargs):
@@ -184,16 +239,14 @@ def associate_household(**kwargs):
         }
 
 
-def insert_chores(_list):
-    for description, big_job in _list:
-        db.session.add(Chore(description=description, is_big_job=big_job))
-
-    db.session.commit()
-
-
 with app.app_context():
     db.create_all()
     db.session.commit()
+
+    chores = db.session.query(Chore).all()
+
+    if not chores:
+        insert_chores(CHORES_LIST)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -66,7 +66,7 @@ class Chore(db.Model):
     description = sa.Column(sa.String, nullable=False)
     deadline = sa.Column(sa.DateTime, nullable=True)
     done_on = sa.Column(sa.DateTime, nullable=True)
-    is_big_job = sa.Column(sa.Boolean, nullable=False, default=False)
+    is_big_job = sa.Column(sa.Boolean, default=False, nullable=False)
     is_done = sa.Column(sa.Boolean, default=False, nullable=False)
 
     # ## Relationships
