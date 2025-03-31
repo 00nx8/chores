@@ -16,6 +16,7 @@ from datetime import datetime
 # unnecessary request sending
 # figure out a way if getting the chart to work is even a good idea and is worth it
 # seperate the table out into components to stop useless template repetition
+
 # create profile page
 
 
