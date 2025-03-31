@@ -1,7 +1,9 @@
 <script lang='ts' setup>
 import { userRequest } from 'src/components/userRequest';
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import GetAHouse from 'src/components/GetAHouse.vue';
+
+const lineChart = ref(null)
 
 interface Chore {
   id: number,
@@ -54,9 +56,10 @@ userRequest('/user/household', {
 }).then(data => {
   if (data.household) {
     household.value = data.household
-    userRequest(`/household/${household.value.id}/chore/True`, {
+    userRequest(`/household/${household.value.id}/chore/todo`, {
       method: "GET",
     }).then(rowsData => {
+      console.log(rowsData)
       rows.value = rowsData.chores
     })
     console.log(rows.value)
@@ -68,12 +71,10 @@ console.log(rows)
 </script>
 
 <template>
-  <h1>Household</h1>
-  <section v-if="household">
-    Welcome {{ username }}
-    <div class="q-pa-md">
+  <section class="q-pa-md" v-if="household">
+    <h1 class="text-h5">Welcome {{ username }}</h1>
+    <div>
 
-      {{ selected }}
       <q-table
         flat bordered dense
         title="TODO"
@@ -90,6 +91,8 @@ console.log(rows)
         <q-btn @click="markAsDone" style="position: fixed; right: 1rem; bottom: 5rem;"  color="teal" icon="done">Done</q-btn>
       </div>
     </div>
+
+
 
   </section>
   <section v-else>

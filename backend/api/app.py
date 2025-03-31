@@ -12,10 +12,10 @@ from datetime import datetime
 
 # TODO:
 # create house overview
-    # Filter chores based on done/todo
-    # maybe introduce filters to the query being sent
-    # (/household/<int:household_id>/chore/<status>)
-    # then the query can be
+# on the householdPage filtering should be done on the front end to reduce
+# unnecessary request sending
+# figure out a way if getting the chart to work is even a good idea and is worth it
+# seperate the table out into components to stop useless template repetition
 # create profile page
 
 
@@ -151,32 +151,32 @@ def mark_chore_done(chore_id, **kwargs):
     return {'status': 'ok', 'chore': chore.to_dict()}
 
 
-@app.route('/household/<int:household_id>/chore/', defaults={'status': None}, methods=["GET"])
 @app.route('/household/<int:household_id>/chore/<status>', methods=["GET"])
 @auth_jwt
 def get_chores(household_id, status, **kwargs):
+    """
+    household_id: int
+    status: string accepted: 'done' | 'todo' | 'all'
+    """
     user = kwargs.get('user')
 
     if not user:
         return {'error': "internal server error"}, 503
-    # TODO:
-    # figure something out here i have no clue i need sleep
-    
-    if status is None:
-        chores = db.session.query(Chore).filter(
-            Chore.household_id == household_id and
-            Chore.resident_id == user.id
-            ).all()
-    elif status == 'done':
-        status = True
+
+    base_query = db.session.query(Chore).filter(
+        Chore.resident_id == user.id,
+        Chore.household_id == household_id,
+    )
+
+    if status == 'done':
+        chores = base_query.filter(Chore.is_done == True).all()  # noqa: E712
+
+    elif status == 'todo':
+        chores = base_query.filter(Chore.is_done == False).all() # noqa: E712
     else:
-        status = False
-    chores = db.session.query(Chore).filter(
-        Chore.household_id == household_id and
-        Chore.resident_id == user.id and
-        Chore.is_done == status
-        ).all()
-    return {'chores': [chore.to_dict() for chore in chores]}
+        chores = base_query.all()
+
+    return {'status': 'ok', 'chores': [chore.to_dict() for chore in chores]}
 
 
 @app.route('/household/create', methods=["POST"])
