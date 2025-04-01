@@ -244,10 +244,10 @@ with app.app_context():
     db.create_all()
     db.session.commit()
 
-    chores = db.session.query(Chore).all()
+    # chores = db.session.query(Chore).all()
 
-    if not chores:
-        insert_chores(CHORES_LIST)
+    # if not chores:
+    #     insert_chores(CHORES_LIST)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -4,11 +4,26 @@
  TODO:get it to shut up
 
  -->
+
+
 <script lang="ts" setup>
 import { ref } from 'vue'
-const props = defineProps({
-  rows: [],
-})
+interface Column {
+  name: string,
+  label: string,
+  align: 'left' | 'right' | 'center',
+  field: string | ((row: any) => any)
+  sortable?: boolean
+
+}
+
+const props = defineProps<{
+  columns: Column[],
+  rows: any[]
+}>()
+
+const columns = props.columns
+const rows = props.rows
 
 const selected = ref([])
 
@@ -20,8 +35,8 @@ const selected = ref([])
   <q-table
     flat bordered dense
     title="TODO"
-    :rows="props.rows!"
-    :columns="props.columns!"
+    :rows="rows"
+    :columns="columns"
     row-key="id"
     selection="multiple"
     v-model:selected="selected"
