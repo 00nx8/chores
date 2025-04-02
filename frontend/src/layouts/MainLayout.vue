@@ -12,7 +12,7 @@
     <q-footer elevated class="bg-grey-8 text-white">
       <q-toolbar class="justify-center">
         <q-tabs align="center" class="q-mb-none q-pt-none q-gutter-none">
-          <q-route-tab to="/" label="One" />
+          <q-route-tab to="/household" label="Household" />
           <q-route-tab to="/" label="Two" />
           <q-route-tab to="/" label="Three" />
         </q-tabs>

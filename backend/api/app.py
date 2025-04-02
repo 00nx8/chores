@@ -58,7 +58,7 @@ CHORES_LIST = [
 
 def insert_chores(_list):
     for description, big_job in _list:
-        db.session.add(Chore(description=description, is_big_job=big_job, household_id=4))
+        db.session.add(Chore(description=description, is_big_job=big_job, household_id=5))
 
     db.session.commit()
 
@@ -165,7 +165,7 @@ def get_chores(household_id, status, **kwargs):
         return {'error': "internal server error"}, 503
 
     base_query = db.session.query(Chore).filter(
-        Chore.resident_id == user.id,
+        # Chore.resident_id == user.id,
         Chore.household_id == household_id,
     )
 
@@ -176,6 +176,7 @@ def get_chores(household_id, status, **kwargs):
         chores = base_query.filter(Chore.is_done == False).all() # noqa: E712
     else:
         chores = base_query.all()
+        print(chores)
 
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in chores]}
 
@@ -244,10 +245,10 @@ with app.app_context():
     db.create_all()
     db.session.commit()
 
-    # chores = db.session.query(Chore).all()
+    chores = db.session.query(Chore).all()
 
-    # if not chores:
-    #     insert_chores(CHORES_LIST)
+    if not chores:
+        insert_chores(CHORES_LIST)
 
 if __name__ == "__main__":
     app.run(debug=True)
