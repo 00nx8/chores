@@ -8,11 +8,10 @@ const router = useRouter()
 
 const isPwd = ref(true)
 const submitting = ref(false)
+const error = ref('')
 
 const username = ref('')
 const password = ref('')
-
-const error = ref('')
 
 function verifyLoginDetails() {
   submitting.value = true

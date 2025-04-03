@@ -17,6 +17,7 @@ pgcli = "^4.3.0"
 postgresqlite = "^0.4.8"
 dotenv = "^0.9.9"
 pyjwt = "^2.10.1"
+crontab = "^1.0.1"
 
 
 [build-system]

@@ -12,10 +12,7 @@ from datetime import datetime
 
 # TODO:
 # create house overview
-# on the householdPage filtering should be done on the front end to reduce
-# unnecessary request sending
 # figure out a way if getting the chart to work is even a good idea and is worth it
-# seperate the table out into components to stop useless template repetition
 
 # create profile page
 
@@ -58,7 +55,7 @@ CHORES_LIST = [
 
 def insert_chores(_list):
     for description, big_job in _list:
-        db.session.add(Chore(description=description, is_big_job=big_job, household_id=5))
+        db.session.add(Chore(description=description, is_big_job=big_job, household_id=6))
 
     db.session.commit()
 

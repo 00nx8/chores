@@ -23,6 +23,11 @@ const columns = toRef(props, 'columns')
 
 const selected = ref([])
 
+rows.value.forEach(chore => {
+  const date = new Date(chore.deadline)
+  chore.deadline = `${date.getUTCDate()}/${date.getUTCMonth() + 1}`
+})
+
 watch(selected, () => {
   emit('selected', selected.value)
 })

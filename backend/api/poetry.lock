@@ -149,6 +149,17 @@ files = [
 ]
 
 [[package]]
+name = "crontab"
+version = "1.0.1"
+description = "Parse and use crontab schedules in Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "crontab-1.0.1.tar.gz", hash = "sha256:89477e3f93c81365e738d5ee2659509e6373bb2846de13922663e79aa74c6b91"},
+]
+
+[[package]]
 name = "dotenv"
 version = "0.9.9"
 description = "Deprecated package"
@@ -1022,4 +1033,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "85ba31d41b2628831d9490e70c7f552a321439fad01aa6e242547d44e54dba8d"
+content-hash = "1e97e6351aa3ad99099ab7a416a10c5c0fe2f2a0439f4f37e0a3a197c362ea53"

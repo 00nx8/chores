@@ -7,8 +7,8 @@ import ChoreTable from 'src/components/ChoreTable.vue';
 export interface Chore {
   id: number,
   desc: string,
-  deadline?: Date,
-  done_on?: Date,
+  deadline: string,
+  done_on?: string,
   is_big_job: boolean,
   is_done: boolean,
   resident_id?: number,
