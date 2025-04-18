@@ -26,8 +26,6 @@ backend:
 
 ```sh
 cd ./backend/api
-touch .env
-echo <your-secret> >> .env
 poetry install
 poetry run python app.py
 ```

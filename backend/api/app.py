@@ -1,14 +1,14 @@
+from datetime import datetime
+import json
+import functools
+from models import db, Chore, Resident, Household, ResidentChores, HouseholdChore
 from flask import Flask, request
 import postgresqlite
 from sqlalchemy.orm import registry
-from models import db, Chore, Resident, Household
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
-import json
-import functools
 from dotenv import dotenv_values
 import jwt
-from datetime import datetime
 
 # TODO:
 # create house overview
@@ -36,29 +36,21 @@ mapper_registry.configure()
 config = dotenv_values('.env')
 
 CHORES_LIST = [
-    ('Vacuum', False),
-    ('Clean the Toilet', False),
-    ('Mop the floor', False),
-    ('Clean the Fridge', True),
-    ('Kitchen sink', False),
-    ('Take out the bins', False),
-    ('Clean the stove', False),
-    ('Wipe kitchen counter', False),
-    ('Clean the shelf/sink in the shower', False),
-    ('Shower Gutter', False),
-    ('Wipe off the bar', False),
-    ('Wipe off coffee tables,', False),
-    ('Beat the carpets', True),
-    ('Clear belongings out of communal areas', False),
+    ('Vacuum', 'False'),
+    ('Clean the Toilet', 'False'),
+    ('Mop the floor', 'False'),
+    ('Clean the Fridge', 'True'),
+    ('Kitchen sink', 'False'),
+    ('Take out the bins', 'False'),
+    ('Clean the stove', 'False'),
+    ('Wipe kitchen counter', 'False'),
+    ('Clean the shelf/sink in the shower', 'False'),
+    ('Shower Gutter', 'False'),
+    ('Wipe off the bar', 'False'),
+    ('Wipe off coffee tables,', 'False'),
+    ('Beat the carpets', 'True'),
+    ('Clear belongings out of communal areas', 'False'),
 ]
-
-
-def insert_chores(_list):
-    for description, big_job in _list:
-        db.session.add(Chore(description=description, is_big_job=big_job, household_id=6))
-
-    db.session.commit()
-
 
 def auth_jwt(func):
     @functools.wraps(func)
@@ -67,14 +59,14 @@ def auth_jwt(func):
 
         if not token:
             return {'error': 'No token or invalid token was provided.'}, 403
-        
+
         decoded = jwt.decode(token, key=config['secretKey'], algorithms=['HS256'])
-        
+
         if not decoded['user_id'] or not decoded['username']:
             return {'error': 'No token or invalid token was provided.'}, 403
 
         existing_user = db.session.query(Resident).filter(Resident.id == decoded['user_id']).first()
-        
+
         if not existing_user:
             return {'error': 'No token or invalid token was provided.'}, 403
 
@@ -157,23 +149,15 @@ def get_chores(household_id, status, **kwargs):
     status: string accepted: 'done' | 'todo' | 'all'
     """
     user = kwargs.get('user')
-
     if not user:
         return {'error': "internal server error"}, 503
-
-    base_query = db.session.query(Chore).filter(
-        # Chore.resident_id == user.id,
-        Chore.household_id == household_id,
-    )
-
-    if status == 'done':
-        chores = base_query.filter(Chore.is_done == True).all()  # noqa: E712
-
-    elif status == 'todo':
-        chores = base_query.filter(Chore.is_done == False).all() # noqa: E712
-    else:
-        chores = base_query.all()
-        print(chores)
+        
+    # TODO
+    # test if this works
+    chores = db.session.query(ResidentChores) \
+            .join(HouseholdChore, ResidentChores.chore_id == HouseholdChore.chore_id) \
+            .filter(household_id == HouseholdChore.household_id, ResidentChores.resident_id == user.id) \
+            .all()
 
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in chores]}
 
@@ -199,6 +183,7 @@ def create_household(**kwargs):
     hashed_password = bcrypt.generate_password_hash(req_body['password']).decode('utf-8')
 
     household = Household(name=req_body['name'], password=hashed_password)
+    
     db.session.add(household)
     db.session.commit()
 
@@ -242,10 +227,10 @@ with app.app_context():
     db.create_all()
     db.session.commit()
 
-    chores = db.session.query(Chore).all()
+    # chores = db.session.query(Chore).all()
 
-    if not chores:
-        insert_chores(CHORES_LIST)
+    # if not chores:
+    #     insert_chores(CHORES_LIST)
 
 if __name__ == "__main__":
     app.run(debug=True)
