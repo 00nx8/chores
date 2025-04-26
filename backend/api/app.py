@@ -12,17 +12,20 @@ import jwt
 
 # TODO:
 # create house overview
-# figure out a way if getting the chart to work is even a good idea and is worth it
-
+    # add an option to view residents, with delete option
 # create profile page
-
+    # overview of all the todos for this person
+# some kind of nav option
+# turn into mobile app
+    # cron jobs for scheduling and assigning chores
+    # notifications
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = postgresqlite.get_uri()
-app.config['SECRET  _KEY'] = 'MEGA super duper secret key'
+app.config['SECRET_KEY'] = 'MEGA super duper secret key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.debug = True
@@ -77,7 +80,13 @@ def auth_jwt(func):
 
 @app.route('/login', methods=["POST"])
 def login():
+    """ 
+    Endpoint for logging in.
+    method: post
+    Requires body/password to be attached to the request body. 
+    """
     req_body = json.loads(request.data.decode())
+
     user = db.session.query(Resident).filter(Resident.name == req_body['username']).first()
 
     if not user:
@@ -118,6 +127,12 @@ def register():
     return {'status': "ok", 'user': new_user.to_dict()}, 200
 
 
+@app.route('/household/<int:household_id>/residents', methods=['GET'])
+@auth_jwt
+def get_users(household_id, **kwargs):
+    residents = db.session.query(Resident).filter(Resident.household_id == household_id).all()
+    return {'status': 'ok', "residents": [resident.to_dict() for resident in residents]}
+
 @app.route('/user/household', methods=['GET'])
 @auth_jwt
 def get_household(**kwargs):
@@ -141,30 +156,29 @@ def mark_chore_done(chore_id, **kwargs):
     return {'status': 'ok', 'chore': chore.to_dict()}
 
 
-@app.route('/household/<int:household_id>/chore/<status>', methods=["GET"])
+@app.route('/household/<int:household_id>/chore', methods=["GET"])
 @auth_jwt
-def get_chores(household_id, status, **kwargs):
+def get_chores(household_id, **kwargs):
     """
     household_id: int
-    status: string accepted: 'done' | 'todo' | 'all'
     """
     user = kwargs.get('user')
     if not user:
         return {'error': "internal server error"}, 503
-        
-    # TODO
-    # test if this works
-    chores = db.session.query(ResidentChores) \
-            .join(HouseholdChore, ResidentChores.chore_id == HouseholdChore.chore_id) \
-            .filter(household_id == HouseholdChore.household_id, ResidentChores.resident_id == user.id) \
-            .all()
+
+    chores = db.session.query(Chore).join(HouseholdChore, Chore.id == HouseholdChore.chore_id) \
+        .filter(household_id == HouseholdChore.household_id).all()
 
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in chores]}
 
 
-@app.route('/household/create', methods=["POST"])
+@app.route('/household', methods=["POST"])
 @auth_jwt
 def create_household(**kwargs):
+    """requires logged in user,
+    requires name and password in request body
+
+    """
     user = kwargs.get('user')
 
     if not user:
@@ -196,6 +210,35 @@ def create_household(**kwargs):
         'household': household.to_dict(),
     }
 
+@app.route('/chore', methods=["POST"])
+@auth_jwt
+def add_chore(**kwargs):
+    req_body = json.loads(request.data.decode())
+
+    if not req_body.get('name'):
+        return {'error': 'No name was provided'}, 403
+    
+    name = req_body.get('name')
+    description = req_body.get('description')
+    doing_it = req_body.get('doing_it')
+
+    household_id = req_body.get('household_id')
+
+    chore = Chore(name=name, description=description)
+
+    if doing_it:
+        chore.doing_it = doing_it
+
+    db.session.add(chore)
+    db.session.commit()
+
+    if household_id:
+        household_chore = HouseholdChore(chore_id=chore.id, household_id=household_id)
+        db.session.add(household_chore)
+        db.session.commit()
+
+    return {"status": "ok", "chore": chore.to_dict()}
+
 
 @app.route('/user/household', methods=['POST'])
 @auth_jwt
@@ -207,13 +250,15 @@ def associate_household(**kwargs):
 
     req_body = json.loads(request.data.decode())
 
-    household = db.session.query(Household).filter(Household.name == req_body['householdName']).first()
+    household = db.session.query(Household).filter(Household.name == req_body['name']).first()
 
-    if not bcrypt.check_password_hash(household.password, req_body['password']):
+    if not household:
+        return {'error': 'requested household not found'}, 404
+
+    if not bcrypt.check_password_hash(household.password, req_body.get('password')):
         return {'error': 'Household doesn\'t exist or incorrect password'}, 403
 
     user.household_id = household.id
-
     db.session.commit()
 
     return {'status': 'ok',
@@ -221,16 +266,35 @@ def associate_household(**kwargs):
             # myb ill need it idk
             # 'household': household.to_dict()
         }
+@app.route('/user/profile_picture', methods=["POST"])
+@auth_jwt
+def set_profile_picture(**kwargs):
+    user = kwargs.get('user')
+    req_body = json.loads(request.data.decode())
 
+    if not req_body.get('profile_picture'):
+        return {'error': 'Please attach a profile picture'}, 400
+
+    return {'status': 'ok'}
+
+
+@app.route('/user', methods=["GET"])
+@auth_jwt
+def get_current_user(**kwargs):
+    user = kwargs.get('user')
+    print(user)
+    if not user:
+        return {'error': 'Token passed authentication but no user was found.'}
+    
+    household = user.household
+    chores = db.session.query(Chore).filter(Chore.doing_it == user.id).all()
+    
+    return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict()}
 
 with app.app_context():
     db.create_all()
     db.session.commit()
 
-    # chores = db.session.query(Chore).all()
-
-    # if not chores:
-    #     insert_chores(CHORES_LIST)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,127 @@
+@import './base.css';
+
+* {
+  font-family: 'Ubuntu Mono';
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button[type="submit"], button,
+.toAction {
+  padding: .5rem 1rem;
+  background-color: #4CAF50;
+  border: none;
+  box-shadow: none;
+  color: white;
+  border-radius: .5rem;
+  font-weight: bold;
+}
+
+.loading > hr {
+  background-color: white;
+  border: none;
+  height: 1px;
+  width: 0px;
+  transition: all 1s ease-in-out;
+}
+
+input[type="file"] {
+  outline: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.flex {
+  display: flex;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.gap-md {
+  gap: 1rem;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.space-evenly {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.selected {
+  transition: all .2s ease-in-out;
+  box-shadow: 
+  2px 2px #3e4a3d, 
+  5px 5px #a1af9f;
+}
+
+.floatingButton {
+  border-radius: 50%;
+  height: 3rem;
+  width: 3rem;
+  position: absolute;
+  bottom: 3rem;
+  right: 1rem;
+}
+
+tr, tr > td {
+  vertical-align: top;
+  width: fit-content;
+}
