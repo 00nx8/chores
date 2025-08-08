@@ -78,6 +78,7 @@ input[type="file"] {
   display: flex;
 }
 
+
 .align-center {
   align-items: center;
 }
@@ -116,7 +117,7 @@ input[type="file"] {
   border-radius: 50%;
   height: 3rem;
   width: 3rem;
-  position: absolute;
+  position: fixed;
   bottom: 3rem;
   right: 1rem;
 }

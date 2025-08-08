@@ -18,7 +18,7 @@ import { RouterLink } from 'vue-router';
 <style scoped>
 nav {
     background-color: rgba(128, 128, 128, 0.075);
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100dvw;
