@@ -37,6 +37,17 @@ function updateChore(chore: Chore, isSelected: boolean) {
     }
 }
 
+// TODO: give functionality to buttons : )
+function buttonCall(action: string) {
+    switch (action) {
+        case ('delete'):
+        case ('re-assign'):
+        case ('complete'):
+            console.log('asd')
+    }
+}
+
+
 </script>
 
 <template>
@@ -66,7 +77,12 @@ function updateChore(chore: Chore, isSelected: boolean) {
         </RouterLink>
     </section>
     <section v-else>
-        <HiddenButtons :buttons="[{icon: 'complete', action: 'complete'}, {icon: 'person', action: 're-assign'}, {icon: 'delete', action: 'delete'}]" />
+        <HiddenButtons @action="buttonCall" :buttons="[
+            {icon: 'https://api.iconify.design/mdi/check.svg?color=white', action: 'complete'},
+            {icon: 'https://api.iconify.design/mdi/account.svg?color=white', action: 're-assign'},
+            {icon: 'https://api.iconify.design/mdi/delete.svg?color=white', action: 'delete'},
+        ]" />
+
     </section>
 </template>
 
