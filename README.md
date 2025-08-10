@@ -13,6 +13,8 @@ backend:
     - flask
     - sqlalchemy/postgresqlite/
 
+docker soon come 🫡
+
 ## Project Setup
 
 
