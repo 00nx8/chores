@@ -6,7 +6,7 @@ import ErrorText from './ErrorText.vue';
 
 const emit = defineEmits(['receivedHousehold'])
 
-const creating = ref(false)
+const creating = ref(null)
 
 const errors = ref([])
 const householdInformation = reactive({
@@ -31,7 +31,6 @@ function makeRequest(url: string) {
 }
 
 function createHousehold() {
-    console.log(householdInformation)
     errors.value = []
     if (!householdInformation.name || !householdInformation.password || !householdInformation.repeatPassword) {
         errors.value.push('All fields are required.')
@@ -61,59 +60,84 @@ function joinHousehold() {
 </script>
 
 <template>
-    <section class="space-evenly gap-md">
-        <button 
-            @click="() => creating = true"
-            :class="creating ? 'selected' : ''"
-        >
-            Create
-        </button>
-        <button 
-            @click="() => creating = false"
-            :class="!creating ? 'selected' : ''"
-        >
-            Join
-        </button>
+    <section :class="creating == null ? 'introContUndecided': ''">
+        <p v-if="creating == null">Would you like to join or create a household?</p>
+        <section class="buttons">
+            <button
+                @click="() => creating = true"
+            >
+                Create
+            </button>
+            <button 
+                @click="() => creating = false"
+            >
+                Join
+            </button>
+        </section>
+
     </section>
 
-    <section v-if="creating">
-        <form @submit.prevent="createHousehold">
-            <CustomInput
-                name="name"
-                type="text"
-                v-model="householdInformation.name"  
-            />
-            <CustomInput
-                name="password"
-                type="password"
-                v-model="householdInformation.password"
-            />
-            <CustomInput
-                name="repeat Password"
-                type="password"
-                v-model="householdInformation.repeatPassword"
-            />
-            <button type="submit">
-                create
-            </button>
-        </form>
-    </section>
-    <section v-else>
-        <form @submit.prevent="joinHousehold">
-            <CustomInput
-                name="name"
-                type="text"
-                v-model="householdInformation.name"
-            />
-            <CustomInput
-                name="password"
-                type="password"
-                v-model="householdInformation.password"
-            />
-            <button>
-                join
-            </button>
-        </form>
+    <section v-if="creating !== null">
+        <section v-if="creating">
+            <form @submit.prevent="createHousehold">
+                <CustomInput
+                    name="Choose a name"
+                    type="text"
+                    v-model="householdInformation.name"  
+                />
+                <CustomInput
+                    name="set a password"
+                    type="password"
+                    v-model="householdInformation.password"
+                />
+                <CustomInput
+                    name="repeat Password"
+                    type="password"
+                    v-model="householdInformation.repeatPassword"
+                />
+                <button type="submit">
+                    create
+                </button>
+            </form>
+        </section>
+        <section v-else>
+            <form @submit.prevent="joinHousehold">
+                <CustomInput
+                    name="name"
+                    type="text"
+                    v-model="householdInformation.name"
+                />
+                <CustomInput
+                    name="password"
+                    type="password"
+                    v-model="householdInformation.password"
+                />
+                <button>
+                    join
+                </button>
+            </form>
+        </section>
     </section>
     <ErrorText v-if="errors.length" :errors="errors"/>
 </template>
+
+
+<style scoped>
+.introContUndecided {
+    display: flex;
+    height: 80dvh;
+    flex-direction: column;
+    text-align: center;
+    gap:1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+}
+.buttons > button:last-child {
+    margin-left: 1rem;
+}
+</style>

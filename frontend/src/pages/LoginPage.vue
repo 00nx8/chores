@@ -19,7 +19,6 @@ const errors = ref([])
 
 
 function validateForm() {
-    console.log(userInfo)
     errors.value = []
     if (!userInfo.username || !userInfo.password) {
         errors.value.push('Please supply a username and password') 

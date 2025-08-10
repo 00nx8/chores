@@ -1,9 +1,8 @@
 from datetime import datetime
 import json
 import functools
-from models import db, Chore, Resident, Household, ResidentChores, HouseholdChore
+from models import db, Chore, Resident, Household, HouseholdChore
 from flask import Flask, request
-import postgresqlite
 from sqlalchemy.orm import registry
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -11,20 +10,29 @@ from dotenv import dotenv_values
 import jwt
 
 # TODO:
+# figure out deadline tracking for each chore.
+    # How to keep track of on time 
+    # make a table that stores chore_id, resident_id, deadline, chore.done_on
+    # can be referenced/updated when needed. 
+    # deadline can serve as a period to query by.
+
+
 # create house overview
     # add an option to view residents, with delete option
+
 # create profile page
     # overview of all the todos for this person
-# some kind of nav option
+
 # turn into mobile app
     # cron jobs for scheduling and assigning chores
     # notifications
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
+config = dotenv_values('.env')
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = postgresqlite.get_uri()
+app.config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URL']
 app.config['SECRET_KEY'] = 'MEGA super duper secret key'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -36,7 +44,6 @@ mapper_registry = registry()
 CORS(app)
 mapper_registry.configure()
 
-config = dotenv_values('.env')
 
 CHORES_LIST = [
     ('Vacuum', 'False'),
@@ -152,6 +159,11 @@ def mark_chore_done(chore_id, **kwargs):
     chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
     chore.is_done = True
     chore.done_on = datetime.today().strftime('%Y-%m-%d')
+
+    user = kwargs.get('user')
+    resident = db.session.query(Resident).filter(user.id == Resident.id)
+    resident.chores_done += 1
+
     db.session.commit()
     return {'status': 'ok', 'chore': chore.to_dict()}
 
@@ -221,11 +233,11 @@ def add_chore(**kwargs):
     name = req_body.get('name')
     description = req_body.get('description')
     doing_it = req_body.get('doing_it')
-
     household_id = req_body.get('household_id')
 
     chore = Chore(name=name, description=description)
 
+    chore.repeat_schedule = req_body.get('frequency')
     if doing_it:
         chore.doing_it = doing_it
 
@@ -266,16 +278,6 @@ def associate_household(**kwargs):
             # myb ill need it idk
             # 'household': household.to_dict()
         }
-@app.route('/user/profile_picture', methods=["POST"])
-@auth_jwt
-def set_profile_picture(**kwargs):
-    user = kwargs.get('user')
-    req_body = json.loads(request.data.decode())
-
-    if not req_body.get('profile_picture'):
-        return {'error': 'Please attach a profile picture'}, 400
-
-    return {'status': 'ok'}
 
 
 @app.route('/user', methods=["GET"])
@@ -289,12 +291,54 @@ def get_current_user(**kwargs):
     household = user.household
     chores = db.session.query(Chore).filter(Chore.doing_it == user.id).all()
     
-    return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict()}
+    return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict() if household else {}}
+
+@app.route('/chore', methods=["DELETE"])
+@auth_jwt
+def delete_chore(**kwargs):
+    req_body = json.loads(request.data.decode())
+    
+    db.session.query(HouseholdChore).filter(HouseholdChore.chore_id == req_body['choreId']).delete()
+    delete_count = db.session.query(Chore).filter(Chore.id == req_body['choreId']).delete()
+
+    db.session.commit()
+
+    if not delete_count:
+        return {'status': 'error', 'error': 'Chore with given ID does not exist.'}, 404
+    
+    return {'status': 'ok'}
 
 with app.app_context():
     db.create_all()
     db.session.commit()
 
+
+# Because posgresqlite sucks and i regret life for using it, these are for dev purposes:
+@app.route('/database', methods=['GET'])
+def print_tables():
+    databases = [Chore, Resident, Household, HouseholdChore]
+    for database in databases:
+        res = db.session.query(database).all()
+
+        for entry in res:
+            try:
+                print(entry.to_dict())
+            except:
+                print(entry)
+
+    return {'status': 'check ur terminal'}
+
+
+@app.route('/database', methods=['DELETE'])
+def delete_tables():
+    databases = [HouseholdChore, Chore, Resident, Household]
+
+    for database in databases:
+        db.session.query(database).delete()
+        db.session.commit()
+
+    return {'status': 'check ur terminal'}
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

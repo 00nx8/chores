@@ -10,7 +10,8 @@ const router = useRouter()
 const choreInfo = reactive({
     name: '',
     description: '',
-    doing_it: 0
+    doing_it: 0,
+    frequency: 7
 })
 
 const errors = ref([])
@@ -25,7 +26,6 @@ userRequest(`/household/${household.id}/residents`, {
 })
 
 function validateForm() {
-    console.log('this runs ??')
     errors.value = []
     
     if (!choreInfo.name || !choreInfo.doing_it || !choreInfo.description) {
@@ -40,7 +40,6 @@ function validateForm() {
             household_id: household.id
         }
     }).then(res => {
-        console.log(res)
         router.push('/')
     })
 
@@ -67,7 +66,17 @@ function validateForm() {
                 <option v-for="resident in residents" :value="resident.id">{{resident.name}}</option>
             </select>
         </label>
-
+        <label>
+            Frequency
+            <select name="doing_it" v-model="choreInfo.frequency">
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="31">31 days</option>
+            </select>
+        </label>
         <button type="submit">
             create
         </button>

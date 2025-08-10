@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps<{
     buttons: Array<{[key: string]: string}>
 }>()
+
 
 const burgerButton = ref()
 
@@ -115,7 +116,7 @@ function hideLabel(i: number) {
 </template>
 
 
-<style>
+<style scoped>
 .hiddenButton {
     opacity: 0;
     z-index: -100;

@@ -2,16 +2,11 @@
 
 import ChoreComponent from './ChoreComponent.vue';
 import HiddenButtons from './HiddenButtons.vue';
-
+import type { Chore } from './interface';
 import { userRequest } from './userRequest';
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
-interface Chore {
-    id: number,
-    description: string,
-    name: string,
-    is_done: boolean
-}
+
 
 const toDo = ref([])
 const done = ref([])
@@ -41,9 +36,31 @@ function updateChore(chore: Chore, isSelected: boolean) {
 function buttonCall(action: string) {
     switch (action) {
         case ('delete'):
+            selectedChores.value.forEach(chore => {
+                userRequest(`/chore`, {
+                    method:"DELETE",
+                    body: {
+                        choreId: chore.id
+                    }
+                })
+                
+            })
+            toDo.value = toDo.value.filter(chore => !selectedChores.value.includes(chore) ) 
+            done.value = done.value.filter(chore => !selectedChores.value.includes(chore) ) 
+            selectedChores.value = []
+            break
         case ('re-assign'):
+
         case ('complete'):
-            console.log('asd')
+            selectedChores.value.forEach(chore => {
+                userRequest(`/chore/${chore.id}`, {
+                    method: 'POST'
+                })
+            })
+            
+            toDo.value = toDo.value.filter(chore => !selectedChores.value.includes(chore) ) 
+            done.value = [...done.value, ...selectedChores.value] 
+            selectedChores.value = []
     }
 }
 
@@ -51,7 +68,7 @@ function buttonCall(action: string) {
 </script>
 
 <template>
-    <h2 style="font-size: 1rem; text-align: center;">{{props.household.name}}</h2>
+    <h2 style="font-size: 1.5rem; text-align: center;">{{props.household.name}}</h2>
 
     <section class="flex space-evenly" style="margin-bottom: 2rem;">
         <section style="text-align: center;">
@@ -65,8 +82,25 @@ function buttonCall(action: string) {
     </section>
 
     <h2>todo:</h2>
-    <section>
+    <section v-if="toDo.length">
         <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " v-for="chore in toDo" :chore="chore" />
+    </section>
+    <section v-else>
+        
+        <p
+            v-if="done.length"
+            style="text-align: center;"
+        >
+            Nothing for now, <br /> relax
+        </p>
+        <p v-else>
+            Click the + Button to setup some chores!
+        </p>
+    </section>
+
+    <section v-if="done.length">
+        <h2>done:</h2>
+        <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " v-for="chore in done" :chore="chore" />
     </section>
 
     <section v-if="!selectedChores.length">

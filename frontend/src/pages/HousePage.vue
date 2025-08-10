@@ -27,7 +27,7 @@ function associateHousehold(household: object) {
 </script>
 
 <template>
-    <h1 style="text-align: center;">Household</h1>
+    <h1 style="text-align: center; font-size: 1rem;">Household</h1>
     <section v-if="loading">
         <span class="loading">
             Loading...

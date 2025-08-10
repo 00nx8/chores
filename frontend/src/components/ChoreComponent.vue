@@ -30,7 +30,7 @@ const isSelected = ref(false)
     </div>
 </template>
 
-<style>
+<style scoped>
 
 
 .cardWrapper {
