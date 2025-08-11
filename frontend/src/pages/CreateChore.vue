@@ -40,6 +40,7 @@ function validateForm() {
             household_id: household.id
         }
     }).then(res => {
+        console.log(res)
         router.push('/')
     })
 

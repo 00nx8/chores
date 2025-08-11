@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 
+import CustomChart from '@/components/CustomChart.vue';
 import { userRequest } from '@/components/userRequest';
-import { reactive, ref, watch } from 'vue';
-import type { Household, Chore, User } from '@/components/interface';
+import { reactive, ref } from 'vue';
+import type { Household, User } from '@/components/interface';
 import type { Ref } from 'vue';
 // TODO:
 // for this you need to figure out the deadlines for the chores.
 // on time chart
-
 
 const userInfo = reactive<{
     household: Household,
@@ -18,8 +18,6 @@ const userInfo = reactive<{
     chores: [],
     user: ref({} as User)
 })
-
-userRequest('/database', {method:'GET'})
 
 const error =  ref('')
 
@@ -40,9 +38,9 @@ userRequest('/user', {method:"GET"})
     <section>
         <section>
             <section>
-                <h1>Hello {{ userInfo.user.name }}</h1>
+                <h1 style="text-align: center;">Hello {{ userInfo.user.name }}</h1>
                 <section v-if="Object.keys(userInfo.household).length">
-                    <p>hi, youre not homeless</p>
+                    <h2 style="text-align: center;">{{userInfo.household.name}}</h2>
                 </section>
                 <section v-else class="noHouseholdCont">
                     You are not part of a household. <br>Join or create one!
@@ -54,7 +52,10 @@ userRequest('/user', {method:"GET"})
                 </section>
             </section>
 
-            
+            <section class="statsCont">
+                <CustomChart :chores="userInfo.chores" />
+                
+            </section>
         </section>
         
     </section>

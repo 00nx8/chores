@@ -44,15 +44,10 @@ class Chore(db.Model):
 
     name = sa.Column(sa.String, nullable=False)
     description = sa.Column(sa.String, nullable=True)
-
     is_done = sa.Column(sa.Boolean, nullable=False, default=False)
-    deadline = sa.Column(sa.DateTime, nullable=True, default=None)
     repeat_schedule = sa.Column(sa.Integer, nullable=False, default=7)
 
     doing_it = sa.Column(sa.Integer, sa.ForeignKey('resident.id'), nullable=True)
-
-
-
     resident = relationship(Resident, back_populates="doing_chore")
 
     def set_deadline(self):
@@ -67,9 +62,16 @@ class Chore(db.Model):
             'name': self.name,
             'description': self.description,
             'is_done': self.is_done,
-            "doing_it": self.resident.name
+            "doing_it": self.resident.name,
+            "done_on": self.done_on,
+            "deadline": self.deadline
         }
 
+class ChoreCompletionTracker(db.Model):
+    id = sa.Column(sa.Integer, sa.PrimaryKey)
+    chore_id = sa.Column(sa.Integer, sa.ForeignKey('chore.id'), nullable=False)
+    done_on = sa.Column(sa.DateTime, nullable=False)
+    deadline = sa.Column(sa.DateTime, nullable=False)
 
 # TODO:
 # delete this garbage

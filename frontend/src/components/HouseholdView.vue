@@ -8,6 +8,9 @@ import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 
+// TODO: 
+// when selecting done chores either present differnet options or not select them.
+
 const toDo = ref([])
 const done = ref([])
 const selectedChores = ref([])
@@ -32,7 +35,6 @@ function updateChore(chore: Chore, isSelected: boolean) {
     }
 }
 
-// TODO: give functionality to buttons : )
 function buttonCall(action: string) {
     switch (action) {
         case ('delete'):
@@ -50,11 +52,13 @@ function buttonCall(action: string) {
             selectedChores.value = []
             break
         case ('re-assign'):
-
+            // TODO
         case ('complete'):
             selectedChores.value.forEach(chore => {
                 userRequest(`/chore/${chore.id}`, {
                     method: 'POST'
+                }).then(res => {
+                    console.log(res)
                 })
             })
             

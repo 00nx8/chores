@@ -8,7 +8,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from dotenv import dotenv_values
 import jwt
-
+from datetime import datetime, timedelta
 # TODO:
 # figure out deadline tracking for each chore.
     # How to keep track of on time 
@@ -158,10 +158,10 @@ def get_household(**kwargs):
 def mark_chore_done(chore_id, **kwargs):
     chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
     chore.is_done = True
-    chore.done_on = datetime.today().strftime('%Y-%m-%d')
+    chore.done_on = datetime.today()
 
     user = kwargs.get('user')
-    resident = db.session.query(Resident).filter(user.id == Resident.id)
+    resident = db.session.query(Resident).filter(user.id == Resident.id).first()
     resident.chores_done += 1
 
     db.session.commit()
@@ -236,6 +236,12 @@ def add_chore(**kwargs):
     household_id = req_body.get('household_id')
 
     chore = Chore(name=name, description=description)
+
+    # #######################
+    deadline = datetime.today() + timedelta(days=1)
+    # #######################
+
+    chore.deadline = deadline
 
     chore.repeat_schedule = req_body.get('frequency')
     if doing_it:
@@ -312,33 +318,5 @@ with app.app_context():
     db.create_all()
     db.session.commit()
 
-
-# Because posgresqlite sucks and i regret life for using it, these are for dev purposes:
-@app.route('/database', methods=['GET'])
-def print_tables():
-    databases = [Chore, Resident, Household, HouseholdChore]
-    for database in databases:
-        res = db.session.query(database).all()
-
-        for entry in res:
-            try:
-                print(entry.to_dict())
-            except:
-                print(entry)
-
-    return {'status': 'check ur terminal'}
-
-
-@app.route('/database', methods=['DELETE'])
-def delete_tables():
-    databases = [HouseholdChore, Chore, Resident, Household]
-
-    for database in databases:
-        db.session.query(database).delete()
-        db.session.commit()
-
-    return {'status': 'check ur terminal'}
-    
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
