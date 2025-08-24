@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 import functools
-from models import db, Chore, Resident, Household, HouseholdChore
+from models import db, Chore, Resident, Household, ChoreCompletion
 from flask import Flask, request
 from sqlalchemy.orm import registry
 from flask_cors import CORS
@@ -157,11 +157,17 @@ def get_household(**kwargs):
 @auth_jwt
 def mark_chore_done(chore_id, **kwargs):
     chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
-    chore.is_done = True
+    # chore.is_done = True
+
+    # TODO
+    # start using the chore completion table instead of chore.is_done
+    # update queries to use choreCOmpletion instead of chore.is_done
+
     chore.done_on = datetime.today()
 
     user = kwargs.get('user')
     resident = db.session.query(Resident).filter(user.id == Resident.id).first()
+    
     resident.chores_done += 1
 
     db.session.commit()
@@ -178,8 +184,7 @@ def get_chores(household_id, **kwargs):
     if not user:
         return {'error': "internal server error"}, 503
 
-    chores = db.session.query(Chore).join(HouseholdChore, Chore.id == HouseholdChore.chore_id) \
-        .filter(household_id == HouseholdChore.household_id).all()
+    chores = db.session.query(Chore).filter(Chore.household_id == household_id).all()
 
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in chores]}
 
@@ -235,7 +240,7 @@ def add_chore(**kwargs):
     doing_it = req_body.get('doing_it')
     household_id = req_body.get('household_id')
 
-    chore = Chore(name=name, description=description)
+    chore = Chore(name=name, description=description, household_id=household_id)
 
     # #######################
     deadline = datetime.today() + timedelta(days=1)
@@ -249,11 +254,6 @@ def add_chore(**kwargs):
 
     db.session.add(chore)
     db.session.commit()
-
-    if household_id:
-        household_chore = HouseholdChore(chore_id=chore.id, household_id=household_id)
-        db.session.add(household_chore)
-        db.session.commit()
 
     return {"status": "ok", "chore": chore.to_dict()}
 
@@ -304,7 +304,6 @@ def get_current_user(**kwargs):
 def delete_chore(**kwargs):
     req_body = json.loads(request.data.decode())
     
-    db.session.query(HouseholdChore).filter(HouseholdChore.chore_id == req_body['choreId']).delete()
     delete_count = db.session.query(Chore).filter(Chore.id == req_body['choreId']).delete()
 
     db.session.commit()

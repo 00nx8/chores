@@ -31,6 +31,8 @@ class Resident(db.Model):
 
     doing_chore = relationship('Chore', back_populates="resident")
 
+    household_chore = relationship("Chore", back_populates="household")
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -44,11 +46,14 @@ class Chore(db.Model):
 
     name = sa.Column(sa.String, nullable=False)
     description = sa.Column(sa.String, nullable=True)
-    is_done = sa.Column(sa.Boolean, nullable=False, default=False)
+
     repeat_schedule = sa.Column(sa.Integer, nullable=False, default=7)
 
-    doing_it = sa.Column(sa.Integer, sa.ForeignKey('resident.id'), nullable=True)
+    resident_id = sa.Column(sa.Integer, sa.ForeignKey('resident.id'), nullable=True)
     resident = relationship(Resident, back_populates="doing_chore")
+
+    household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id', nullable=False))
+    household = relationship(Household, back_populates="household_chore")
 
     def set_deadline(self):
         # once its been done for 3 days
@@ -67,19 +72,10 @@ class Chore(db.Model):
             "deadline": self.deadline
         }
 
-class ChoreCompletionTracker(db.Model):
-    id = sa.Column(sa.Integer, sa.PrimaryKey)
-    chore_id = sa.Column(sa.Integer, sa.ForeignKey('chore.id'), nullable=False)
+class ChoreCompletion(db.Model):
+    chore_id = sa.Column(sa.Integer, sa.ForeignKey('chore.id'),primary_key=True, nullable=False)
+    resident_id = sa.Column(sa.Integer, sa.ForeignKey('resident.id'),primary_key=True, nullable=False)
+    Household_id = sa.COlumn(sa.Integer, nullable=False)
     done_on = sa.Column(sa.DateTime, nullable=False)
     deadline = sa.Column(sa.DateTime, nullable=False)
-
-# TODO:
-# delete this garbage
-class ResidentChores(db.Model):
-    resident_id = sa.Column(sa.ForeignKey('resident.id'), primary_key=True)
-    chore_id = sa.Column(sa.ForeignKey('chore.id'), primary_key=True)
-# and this one
-class HouseholdChore(db.Model):
-    household_id = sa.Column(sa.ForeignKey('household.id'), primary_key=True)
-    chore_id = sa.Column(sa.ForeignKey('chore.id'), primary_key=True)
 
