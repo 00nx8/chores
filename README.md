@@ -1,33 +1,43 @@
-# chores_app
+# 🧹 chores_app
 
-Neither me nor my room mate like to clean or remember to take out the trash.
-so im making a mobile app to help remind both of us
+**Chores App** is a next-level household chore management tool built to make sharing and tracking tasks effortless.
 
-Tech: 
-frontend:
-    - Vue
-    - quasar
-    - capacitor (at some point)
+It features:
 
-backend:
-    - flask
-    - sqlalchemy/postgresqlite/
+- A **Vue + Quasar** frontend with account management and household sharing
+- A **Flask** backend using **SQLAlchemy** with PostgreSQL or SQLite
+- **Docker** support for easy setup and deployment
 
-docker soon come 🫡
+---
 
-## Project Setup
+## 🏠 Features
 
+- Create chores tied to your household
+- Set repeat schedules (e.g., every 7 days)
+- Get reminders when chores are due
+- Track when chores are completed — and whether they were on time
+- Share chores with others in the same household
 
-frontend
-```sh
-cd ./frontend/chores
-npm install
-npm run dev
-```
-backend:
+---
 
-```sh
-cd ./backend/api
-poetry install
-poetry run python app.py
-```
+## 🛠️ Tech Stack
+
+### Frontend
+- [Vue.js](https://vuejs.org/)
+- [Quasar Framework](https://quasar.dev/)
+- [Capacitor](https://capacitorjs.com/) *(planned for future mobile support)*
+
+### Backend
+- [Flask](https://flask.palletsprojects.com/)
+- [SQLAlchemy](https://www.sqlalchemy.org/)
+- [PostgreSQL](https://www.postgresql.org/) / [SQLite](https://www.sqlite.org/index.html)
+
+### Development & Deployment
+- [Docker](https://www.docker.com/)
+
+---
+
+## 🚀 Getting Started
+
+Coming soon...
+
