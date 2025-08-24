@@ -5,7 +5,7 @@
 It features:
 
 - A **Vue + Quasar** frontend with account management and household sharing
-- A **Flask** backend using **SQLAlchemy** with PostgreSQL or SQLite
+- A **Flask** backend using **SQLAlchemy** with PostgreSQL
 - **Docker** support for easy setup and deployment
 
 ---
