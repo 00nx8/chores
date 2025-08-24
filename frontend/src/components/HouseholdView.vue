@@ -21,9 +21,11 @@ const props = defineProps<{
 userRequest(`/household/${props.household.id}/chore`, {
     method: 'GET'
 }).then(res => {
-    toDo.value = res.chores.filter((chore: Chore) => chore.is_done == false)
-    done.value = res.chores.filter((chore: Chore) => chore.is_done == true)
+    toDo.value = res.chores
 })
+
+// userRequest('')
+
 
 function updateChore(chore: Chore, isSelected: boolean) {
     if (isSelected) {

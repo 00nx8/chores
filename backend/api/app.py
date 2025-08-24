@@ -156,22 +156,23 @@ def get_household(**kwargs):
 @app.route('/chore/<int:chore_id>', methods=['POST'])
 @auth_jwt
 def mark_chore_done(chore_id, **kwargs):
-    chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
-    # chore.is_done = True
-
-    # TODO
-    # start using the chore completion table instead of chore.is_done
-    # update queries to use choreCOmpletion instead of chore.is_done
-
-    chore.done_on = datetime.today()
-
     user = kwargs.get('user')
     resident = db.session.query(Resident).filter(user.id == Resident.id).first()
-    
-    resident.chores_done += 1
+    chore = db.session.query(Chore).filter(Chore.id == chore_id).first()
 
+    completion = ChoreCompletion(
+            chore_id=chore_id,
+            resident_id=resident.id,
+            household_id=resident.household_id
+        )
+
+    completion.done_on = datetime.today()
+    completion.deadline = chore.deadline
+
+    db.session.add(completion)
     db.session.commit()
-    return {'status': 'ok', 'chore': chore.to_dict()}
+    return {'status': 'ok', 'chore': completion.to_dict()}
+
 
 
 @app.route('/household/<int:household_id>/chore', methods=["GET"])
@@ -234,7 +235,7 @@ def add_chore(**kwargs):
 
     if not req_body.get('name'):
         return {'error': 'No name was provided'}, 403
-    
+
     name = req_body.get('name')
     description = req_body.get('description')
     doing_it = req_body.get('doing_it')
@@ -242,15 +243,12 @@ def add_chore(**kwargs):
 
     chore = Chore(name=name, description=description, household_id=household_id)
 
-    # #######################
-    deadline = datetime.today() + timedelta(days=1)
-    # #######################
-
-    chore.deadline = deadline
-
     chore.repeat_schedule = req_body.get('frequency')
+
+    chore.deadline = datetime.today() + timedelta(days=chore.repeat_schedule)
+
     if doing_it:
-        chore.doing_it = doing_it
+        chore.resident_id = doing_it
 
     db.session.add(chore)
     db.session.commit()
@@ -312,6 +310,18 @@ def delete_chore(**kwargs):
         return {'status': 'error', 'error': 'Chore with given ID does not exist.'}, 404
     
     return {'status': 'ok'}
+
+@app.doute('/chore/<int:household_id>/done')
+@auth_jwt
+def get_done_chores(household_id, **kwargs):
+    done_chores = db.session.query(ChoreCompletion).filter(ChoreCompletion.household_id == household_id).all()
+
+    # This will return all done chores, 
+    # figure out a way to not return too many,
+    # all done chores will be kept in the database
+    # time frame? - returm the chore if current_date isnt more than done_on + repeat_schedule
+    return {'status': 'ok'}
+
 
 with app.app_context():
     db.create_all()

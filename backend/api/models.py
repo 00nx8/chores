@@ -12,6 +12,9 @@ class Household(db.Model):
 
     user = relationship('Resident', back_populates='household')
 
+    household_chore = relationship("Chore", back_populates="household")
+
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -31,7 +34,7 @@ class Resident(db.Model):
 
     doing_chore = relationship('Chore', back_populates="resident")
 
-    household_chore = relationship("Chore", back_populates="household")
+    completed_chore = relationship('ChoreCompletion', back_populates='resident')
 
     def to_dict(self):
         return {
@@ -49,33 +52,44 @@ class Chore(db.Model):
 
     repeat_schedule = sa.Column(sa.Integer, nullable=False, default=7)
 
+    deadline = sa.Column(sa.DateTime, nullable=True)
+
     resident_id = sa.Column(sa.Integer, sa.ForeignKey('resident.id'), nullable=True)
     resident = relationship(Resident, back_populates="doing_chore")
 
-    household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id', nullable=False))
+    household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id'), nullable=False)
     household = relationship(Household, back_populates="household_chore")
 
-    def set_deadline(self):
-        # once its been done for 3 days
-        # it will be re assigned.
-
-        pass
+    completion = relationship('ChoreCompletion', back_populates='chore')
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'is_done': self.is_done,
-            "doing_it": self.resident.name,
-            "done_on": self.done_on,
-            "deadline": self.deadline
+            'repeat_schedule': self.repeat_schedule,
+            'deadline': self.deadline,
+            'resident_id': self.resident_id,
+            'household_id': self.household_id 
         }
 
 class ChoreCompletion(db.Model):
     chore_id = sa.Column(sa.Integer, sa.ForeignKey('chore.id'),primary_key=True, nullable=False)
     resident_id = sa.Column(sa.Integer, sa.ForeignKey('resident.id'),primary_key=True, nullable=False)
-    Household_id = sa.COlumn(sa.Integer, nullable=False)
+
+    household_id = sa.Column(sa.Integer, nullable=False)
     done_on = sa.Column(sa.DateTime, nullable=False)
     deadline = sa.Column(sa.DateTime, nullable=False)
+
+    chore = relationship('Chore', back_populates='completion')
+    resident = relationship('Resident', back_populates='')
+
+    def to_dict(self):
+        return {
+            'chore_id': self.chore_id,
+            'resident_id': self.resident_id,
+            'household_id': self.household_id,
+            'done_on': self.done_on,
+            'deadline': self.deadline
+        }
 
