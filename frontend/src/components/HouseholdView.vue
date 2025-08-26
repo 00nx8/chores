@@ -11,8 +11,6 @@ import { RouterLink } from 'vue-router';
 // TODO: 
 // when selecting done chores either present differnet options or not select them.
 
-const allChores = ref([])
-
 const toDo = ref([])
 const done = ref([])
 const selectedChores = ref([])
@@ -20,31 +18,29 @@ const props = defineProps<{
     household: {[key:string]: string}
 }>()
 
-userRequest(`/household/${props.household.id}/chore`, {
-    method: "GET"
-}).then(res => {
-    const allChores = res.chores
+Promise.all([
+    userRequest(`/household/${props.household.id}/chore`, {method: "GET"}),
+    userRequest(`/household/${props.household.id}/done`, {method: "GET"})
+]).then(([allRes, doneRes]) => {
+    const allChores = allRes.chores
+    const doneChoresMap = new Map()
 
-    userRequest(`/household/${props.household.id}/done`, {
-        method: "GET"
-    }).then(res => {
-        const doneChoresMap = new Map()
-
-        // Store done chores in a Map for quick lookup and access to `done_on`
-        res.chores.forEach(completed => {
-            doneChoresMap.set(completed.chore_id, completed)
-        })
-
-        done.value = allChores
-            .filter(chore => doneChoresMap.has(chore.id))
-            .map(chore => ({
-                ...chore,
-                done_on: doneChoresMap.get(chore.id).done_on
-            }))
-
-        toDo.value = allChores.filter(chore => !doneChoresMap.has(chore.id))
+    // Store done chores in a Map for quick lookup and access to `done_on`
+    doneRes.chores.forEach(completed => {
+        doneChoresMap.set(completed.chore_id, completed)
     })
+
+    done.value = allChores
+        .filter(chore => doneChoresMap.has(chore.id))
+        .map(chore => ({
+            ...chore,
+            done_on: doneChoresMap.get(chore.id).done_on
+        }))
+
+    toDo.value = allChores.filter(chore => !doneChoresMap.has(chore.id))
+
 })
+
 
 function updateChore(chore: Chore, isSelected: boolean) {
     if (isSelected) {

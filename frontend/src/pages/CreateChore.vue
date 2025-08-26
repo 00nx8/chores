@@ -37,7 +37,7 @@ function validateForm() {
         method: "POST",
         body: {
             ...choreInfo,
-            household_id: household.id
+            household_id: household.id as string
         }
     }).then(res => {
         console.log(res)

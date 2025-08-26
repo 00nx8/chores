@@ -2,7 +2,7 @@ import Cookies from "universal-cookie"
 
 const cookies = new Cookies()
 
-export async function userRequest(url: string, obj: {[key: string]: string | {[key: string]: string}}) {
+export async function userRequest(url: string, obj: {[key: string]: string | {[key: string]: any}}) {
   obj.headers = {
     'Accept': "application/json",
     'Content-Type': "application/json"
