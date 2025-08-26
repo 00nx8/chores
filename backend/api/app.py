@@ -287,13 +287,10 @@ def associate_household(**kwargs):
 @auth_jwt
 def get_current_user(**kwargs):
     user = kwargs.get('user')
-    print(user)
     if not user:
         return {'error': 'Token passed authentication but no user was found.'}
-    print(user)
     household = user.household
     chores = db.session.query(Chore).filter(Chore.resident_id == user.id).all()
-    print(chores)
     
     return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict() if household else {}}
 
@@ -316,16 +313,68 @@ def delete_chore(**kwargs):
 def get_done_chores(household_id, **kwargs):
     recent_done_chores = db.session.query(ChoreCompletion) \
         .join(Chore, Chore.id == ChoreCompletion.chore_id) \
-        .filter(ChoreCompletion.household_id == household_id) \
-        .filter(
-                ChoreCompletion.done_on > func.now() - (literal_column("interval '1 day'") * Chore.repeat_schedule)
-    ).all()
+        .filter(ChoreCompletion.household_id == household_id).all()
+        # .filter(
+        #         ChoreCompletion.done_on > func.now() - (literal_column("interval '1 day'") * Chore.repeat_schedule))
     
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in recent_done_chores]}
 
 
+def populate_schema():
+    import random
+    from datetime import datetime, timedelta
+
+    # === 1. Generate Random Chores ===
+
+    sample_chore_names = [
+        "Take out trash", "Clean kitchen", "Vacuum living room",
+        "Water plants", "Feed the cat", "Laundry", "Grocery shopping"
+    ]
+
+    chores = []
+    for i in range(5):
+        name = random.choice(sample_chore_names)
+        description = f"{name} - auto generated"
+        repeat_schedule = random.choice([1, 3, 7, 14])
+        deadline = datetime.now() + timedelta(days=random.randint(1, 7))
+
+        chore = Chore(
+            name=name,
+            description=description,
+            repeat_schedule=repeat_schedule,
+            deadline=deadline,
+            resident_id=1,
+            household_id=1
+        )
+        chores.append(chore)
+    db.session.add_all(chores)
+    db.session.commit()
+
+    # === 2. Generate Random Chore Completions ===
+
+    chore_completions = []
+    for i in range(5):
+        chore = random.choice(chores)
+        days_ago_done = random.randint(0, 90)
+        done_on = datetime.now() - timedelta(days=days_ago_done)
+        # Deadline is before done_on (by 1 to 7 days)
+        deadline = done_on - timedelta(days=random.randint(1, 7))
+
+        completion = ChoreCompletion(
+            chore_id=chore.id,
+            resident_id=1,
+            household_id=1,
+            done_on=done_on,
+            deadline=deadline
+        )
+        chore_completions.append(completion)
+        db.session.add_all(chore_completions)
+        db.session.commit()
+
+
 with app.app_context():
     db.create_all()
+    # populate_schema()
     db.session.commit()
 
 if __name__ == "__main__":
