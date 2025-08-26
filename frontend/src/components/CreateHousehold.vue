@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import CustomInput from './CustomInput.vue';
-import { setUserInfo, userRequest } from './userRequest';
+import { userRequest } from './userRequest';
 import ErrorText from './ErrorText.vue';
 
+// send household object back to parent component when ever it was recieved from backend
 const emit = defineEmits(['receivedHousehold'])
 
+// switch between creating/joining household
 const creating = ref(null)
 
+// used to display multiple errors at the same time.
 const errors = ref([])
+
 const householdInformation = reactive({
     name: '',
     password: '',
@@ -16,6 +20,7 @@ const householdInformation = reactive({
 })
 
 function makeRequest(url: string) {
+    // send a request to the given url with the filled in information about household
     userRequest(url, {
         method: 'POST',
         body: {
@@ -31,6 +36,7 @@ function makeRequest(url: string) {
 }
 
 function createHousehold() {
+    // checks if all information for the household is provided/correct then sends the request.
     errors.value = []
     if (!householdInformation.name || !householdInformation.password || !householdInformation.repeatPassword) {
         errors.value.push('All fields are required.')
@@ -48,6 +54,8 @@ function createHousehold() {
 }
 
 function joinHousehold() {
+    // checks if all information for the household is provided/correct then sends the request.
+
     if (!householdInformation.name || !householdInformation.password ) {
         errors.value.push('All fields are required.')
         return

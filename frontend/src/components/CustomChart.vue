@@ -4,12 +4,22 @@ import { userRequest } from './userRequest';
 
 const props = defineProps(['chores'])
 
-const chartBody = ref()
-
 const chartTextLeft = 'Chores done'
 const chartTextBottom = 'Date'
 
-const displayedMonths = ref({})
+const displayedMonths = ref({
+    '01': 4,
+    '02': 7,
+    '04': 2,
+    '05': 2,
+    '06': 5,
+    '07': 4,
+    '08': 2
+})
+
+// const displayedMonths = ref({})
+// chores is a list of objects with information about when a chore was done. 
+// this adds up how many chores were done in a given month
 props.chores.forEach(chore => {
     const dateObj = new Date(chore.done_on)
 
@@ -22,25 +32,40 @@ props.chores.forEach(chore => {
     }
 })
 
+// gets the highest amount in the dataset
 const maxCount = Math.max(...Object.values(displayedMonths.value) as [number])
-const countRange = Array.from({ length: maxCount + 1 }, (_, i) => maxCount - i);
-const chartHeight = 10
+// generates a list from 1 to the highest amount
+let countRange = Array.from({ length: maxCount }, (_, i) => maxCount - i).reverse()
 
-const scale = computed(() => {
-  return maxCount > 0 ? chartHeight / maxCount : 0
-})
+// if the number keys generated is higher then the allowed amount, it removes the excess from low->high
+const MAX_DISPLAYED_KEYS = 8
+let excess = 0
+if ( countRange.length > MAX_DISPLAYED_KEYS) {
+    excess = MAX_DISPLAYED_KEYS - countRange.length
+    if (excess < 0){
+        countRange.splice(0, excess * -1)
+    }
+}
 
+const CHART_HEIGHT = 10
+
+// used to determine the height of bars/position of keys on the chart.
+const scale = CHART_HEIGHT / countRange.length
+// TODO
+// if the value in the month is lower than the excess i.e val - excess = <0 then the height will be determined with a negative integer.
+// this leads to some funy graphs where 2 is higher than 7
+// also if the value displayed on theg graph is lower than the lowest number displayed, how should it be done ?
 </script>
 
 <template>
     <section class="container">
-        <h2>Chart</h2>
-        <section ref="chartBody" class="chartBody">
+        <h2>Chart</h2>  
+        <section class="chartBody">
             <div class="bars">
                 <div
                     v-for="(month, i) in Object.keys(displayedMonths)"
                     class="bar"
-                    :style="{left: `${i * 2}rem`, height: `${displayedMonths[month] * scale}rem`}"
+                    :style="{left: `${i * 2}rem`, height: `${(displayedMonths[month] - -excess) * scale}rem`}"
                  >{{displayedMonths[month]}}</div>
             </div>
             <div>
@@ -50,9 +75,9 @@ const scale = computed(() => {
             </div>
             <div class="keys">
                 <p 
-                    :key="i" v-for="i in countRange"
-                    :style="{position: 'absolute', bottom: `${i * scale * .85}rem`}"
-                >{{ i }}</p>
+                    :key="i" v-for="val, i in countRange"
+                    :style="{position: 'absolute', bottom: `${i * scale}rem`}"
+                >{{ val }}</p>
             </div>
             <div class="labelBottom">
                 {{ chartTextBottom }}
@@ -84,6 +109,7 @@ const scale = computed(() => {
     height: 9rem;
     background-color: red;
     width: 1.2rem;
+    min-height: .5rem;
 }
 .container {
     width: 100%;

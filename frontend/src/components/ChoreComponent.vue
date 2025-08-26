@@ -2,10 +2,14 @@
 import { ref } from 'vue';
 const props = defineProps(['chore', 'status']);
 
+// chroes to be displayed
 const chore = ref(props.chore)
+// emit this when ever a chore has its input selected
 const emit = defineEmits(['choreSelected'])
+// value of the checkbox
 const isSelected = ref(false)
 
+// extract the month from the date object
 const deadline = new Date(props.chore.deadline).toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short'
