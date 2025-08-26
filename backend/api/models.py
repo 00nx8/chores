@@ -70,7 +70,8 @@ class Chore(db.Model):
             'repeat_schedule': self.repeat_schedule,
             'deadline': self.deadline,
             'resident_id': self.resident_id,
-            'household_id': self.household_id 
+            'household_id': self.household_id,
+            'resident': self.resident.to_dict() 
         }
 
 class ChoreCompletion(db.Model):
@@ -90,6 +91,8 @@ class ChoreCompletion(db.Model):
             'resident_id': self.resident_id,
             'household_id': self.household_id,
             'done_on': self.done_on,
-            'deadline': self.deadline
+            'deadline': self.deadline,
+            'chore': self.chore.to_dict(),
+            'resident': self.resident.to_dict()
         }
 

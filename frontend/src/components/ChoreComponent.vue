@@ -1,11 +1,19 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-const props = defineProps(['chore', 'i', 'selectedChores']);
+const props = defineProps(['chore', 'status']);
 
 const chore = ref(props.chore)
 const emit = defineEmits(['choreSelected'])
 const isSelected = ref(false)
 
+const deadline = new Date(props.chore.deadline).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short'
+    })
+const doneOn = new Date(props.chore.done_on).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short'
+    })
 </script>
 
 <template>
@@ -18,13 +26,15 @@ const isSelected = ref(false)
                 <div class="choreDetails">
                     <h2>{{ chore.name }}</h2>
                     <section>
-                        <p>Todo</p>
+                        <p>{{ props.status }}</p>
                     </section>
                 </div>
             </div>
             <div class="cardBody">
                 <p>{{ chore.description }}</p>
-                <p>Assigned to: {{ chore.doing_it }}</p>
+                <p>Assigned to: {{ chore.resident.name }}</p>
+                <p v-if="status == 'done'">Done on:{{ doneOn }}</p>
+                <p v-else>Deadline: {{ deadline }}</p>
             </div>
         </div>
     </div>

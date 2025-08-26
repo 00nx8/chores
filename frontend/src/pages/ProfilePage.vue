@@ -2,35 +2,35 @@
 
 import CustomChart from '@/components/CustomChart.vue';
 import { userRequest } from '@/components/userRequest';
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import type { Household, User } from '@/components/interface';
-import type { Ref } from 'vue';
+
 // TODO:
 // for this you need to figure out the deadlines for the chores.
 // on time chart
 
-const userInfo = reactive<{
-    household: Household,
-    chores: [],
-    user: Ref<User>
-}>({
-    household: {} as Household,
-    chores: [],
-    user: ref({} as User)
-})
+const user = ref<User>({} as User)
+const household = ref<Household>({} as Household)
+const chores = ref([])
 
 const error =  ref('')
 
 userRequest('/user', {method:"GET"})
-    .then(res => {
-        if (res.error) {
-            error.value = res.error
-            return
-        }
-        userInfo.household = res.household
-        userInfo.chores = res.chores
-        userInfo.user = res.user
+.then(res => {
+    if (res.error) {
+        error.value = res.error
+        return
+    }
+    
+    household.value = res.household
+    user.value = res.user
+
+    userRequest(`/household/${household.value.id}/done`, {method: "GET"}).then(res => {
+        chores.value = res.chores
     })
+
+})
+
 
 </script>
 
@@ -38,9 +38,9 @@ userRequest('/user', {method:"GET"})
     <section>
         <section>
             <section>
-                <h1 style="text-align: center;">Hello {{ userInfo.user.name }}</h1>
-                <section v-if="Object.keys(userInfo.household).length">
-                    <h2 style="text-align: center;">{{userInfo.household.name}}</h2>
+                <h1 style="text-align: center;">Hello {{ user.name }}</h1>
+                <section v-if="Object.keys(household).length">
+                    <h2 style="text-align: center;">{{household.name}}</h2>
                 </section>
                 <section v-else class="noHouseholdCont">
                     You are not part of a household. <br>Join or create one!
@@ -52,8 +52,8 @@ userRequest('/user', {method:"GET"})
                 </section>
             </section>
 
-            <section class="statsCont">
-                <CustomChart :chores="userInfo.chores" />
+            <section v-if="chores.length" class="statsCont">
+                <CustomChart :chores="chores" />
                 
             </section>
         </section>

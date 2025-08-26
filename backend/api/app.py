@@ -4,6 +4,7 @@ import functools
 from models import db, Chore, Resident, Household, ChoreCompletion
 from flask import Flask, request
 from sqlalchemy.orm import registry
+from sqlalchemy import literal_column, func
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from dotenv import dotenv_values
@@ -171,7 +172,7 @@ def mark_chore_done(chore_id, **kwargs):
 
     db.session.add(completion)
     db.session.commit()
-    return {'status': 'ok', 'chore': completion.to_dict()}
+    return {'status': 'ok', 'chore': chore.to_dict(), 'completion': completion.to_dict()}
 
 
 
@@ -243,7 +244,7 @@ def add_chore(**kwargs):
 
     chore = Chore(name=name, description=description, household_id=household_id)
 
-    chore.repeat_schedule = req_body.get('frequency')
+    chore.repeat_schedule = int(req_body.get('frequency'))
 
     chore.deadline = datetime.today() + timedelta(days=chore.repeat_schedule)
 
@@ -278,9 +279,7 @@ def associate_household(**kwargs):
     db.session.commit()
 
     return {'status': 'ok',
-            'user': user.to_dict(),
-            # myb ill need it idk
-            # 'household': household.to_dict()
+            'user': user.to_dict()
         }
 
 
@@ -291,9 +290,10 @@ def get_current_user(**kwargs):
     print(user)
     if not user:
         return {'error': 'Token passed authentication but no user was found.'}
-    
+    print(user)
     household = user.household
-    chores = db.session.query(Chore).filter(Chore.doing_it == user.id).all()
+    chores = db.session.query(Chore).filter(Chore.resident_id == user.id).all()
+    print(chores)
     
     return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict() if household else {}}
 
@@ -311,16 +311,17 @@ def delete_chore(**kwargs):
     
     return {'status': 'ok'}
 
-@app.doute('/chore/<int:household_id>/done')
+@app.route('/household/<int:household_id>/done', methods=['GET'])
 @auth_jwt
 def get_done_chores(household_id, **kwargs):
-    done_chores = db.session.query(ChoreCompletion).filter(ChoreCompletion.household_id == household_id).all()
-
-    # This will return all done chores, 
-    # figure out a way to not return too many,
-    # all done chores will be kept in the database
-    # time frame? - returm the chore if current_date isnt more than done_on + repeat_schedule
-    return {'status': 'ok'}
+    recent_done_chores = db.session.query(ChoreCompletion) \
+        .join(Chore, Chore.id == ChoreCompletion.chore_id) \
+        .filter(ChoreCompletion.household_id == household_id) \
+        .filter(
+                ChoreCompletion.done_on > func.now() - (literal_column("interval '1 day'") * Chore.repeat_schedule)
+    ).all()
+    
+    return {'status': 'ok', 'chores': [chore.to_dict() for chore in recent_done_chores]}
 
 
 with app.app_context():

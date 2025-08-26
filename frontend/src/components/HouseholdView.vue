@@ -4,12 +4,14 @@ import ChoreComponent from './ChoreComponent.vue';
 import HiddenButtons from './HiddenButtons.vue';
 import type { Chore } from './interface';
 import { userRequest } from './userRequest';
-import { ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 
 
 // TODO: 
 // when selecting done chores either present differnet options or not select them.
+
+const allChores = ref([])
 
 const toDo = ref([])
 const done = ref([])
@@ -19,13 +21,30 @@ const props = defineProps<{
 }>()
 
 userRequest(`/household/${props.household.id}/chore`, {
-    method: 'GET'
+    method: "GET"
 }).then(res => {
-    toDo.value = res.chores
+    const allChores = res.chores
+
+    userRequest(`/household/${props.household.id}/done`, {
+        method: "GET"
+    }).then(res => {
+        const doneChoresMap = new Map()
+
+        // Store done chores in a Map for quick lookup and access to `done_on`
+        res.chores.forEach(completed => {
+            doneChoresMap.set(completed.chore_id, completed)
+        })
+
+        done.value = allChores
+            .filter(chore => doneChoresMap.has(chore.id))
+            .map(chore => ({
+                ...chore,
+                done_on: doneChoresMap.get(chore.id).done_on
+            }))
+
+        toDo.value = allChores.filter(chore => !doneChoresMap.has(chore.id))
+    })
 })
-
-// userRequest('')
-
 
 function updateChore(chore: Chore, isSelected: boolean) {
     if (isSelected) {
@@ -37,7 +56,7 @@ function updateChore(chore: Chore, isSelected: boolean) {
     }
 }
 
-function buttonCall(action: string) {
+async function buttonCall(action: string) {
     switch (action) {
         case ('delete'):
             selectedChores.value.forEach(chore => {
@@ -56,17 +75,22 @@ function buttonCall(action: string) {
         case ('re-assign'):
             // TODO
         case ('complete'):
-            selectedChores.value.forEach(chore => {
-                userRequest(`/chore/${chore.id}`, {
-                    method: 'POST'
-                }).then(res => {
-                    console.log(res)
+                const completionPromises = selectedChores.value.map(async (chore) => {
+                    const res = await userRequest(`/chore/${chore.id}`, { method: 'POST' })
+                        chore.done_on = res.completion.done_on
+                        return chore
                 })
-            })
-            
-            toDo.value = toDo.value.filter(chore => !selectedChores.value.includes(chore) ) 
-            done.value = [...done.value, ...selectedChores.value] 
-            selectedChores.value = []
+
+                const completedChores = await Promise.all(completionPromises)
+
+                done.value.push(...completedChores)
+
+                toDo.value = toDo.value.filter(
+                    toDoChore => !selectedChores.value.some(selected => selected.id === toDoChore.id)
+                )
+
+                selectedChores.value = []
+                break
     }
 }
 
@@ -89,7 +113,7 @@ function buttonCall(action: string) {
 
     <h2>todo:</h2>
     <section v-if="toDo.length">
-        <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " v-for="chore in toDo" :chore="chore" />
+        <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " :key="chore.id" :status="'todo'" v-for="chore in toDo" :chore="chore" />
     </section>
     <section v-else>
         
@@ -106,7 +130,7 @@ function buttonCall(action: string) {
 
     <section v-if="done.length">
         <h2>done:</h2>
-        <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " v-for="chore in done" :chore="chore" />
+        <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " :key="chore.id" v-for="chore in done" :status="'done'" :chore="chore" />
     </section>
 
     <section v-if="!selectedChores.length">
