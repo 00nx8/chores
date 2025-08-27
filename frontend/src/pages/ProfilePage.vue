@@ -30,8 +30,6 @@ userRequest('/user', {method:"GET"})
     })
 
 })
-
-
 </script>
 
 <template>
@@ -53,8 +51,16 @@ userRequest('/user', {method:"GET"})
             </section>
 
             <section v-if="chores.length" class="statsCont">
-                <CustomChart :chores="chores" />
-                
+                <CustomChart 
+                    :title="'Overview'"
+                    :tagLeft="'Chores Done'"
+                    :tagBottom="'Month'"
+                    :chores="chores"
+                    />
+            </section>
+
+            <section style="padding-top: 1rem;">
+                <h2>Household</h2>
             </section>
         </section>
         
