@@ -4,7 +4,7 @@ import functools
 from models import db, Chore, Resident, Household, ChoreCompletion
 from flask import Flask, request
 from sqlalchemy.orm import registry
-from sqlalchemy import literal_column, func
+from sqlalchemy import asc
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from dotenv import dotenv_values
@@ -313,7 +313,8 @@ def delete_chore(**kwargs):
 def get_done_chores(household_id, **kwargs):
     recent_done_chores = db.session.query(ChoreCompletion) \
         .join(Chore, Chore.id == ChoreCompletion.chore_id) \
-        .filter(ChoreCompletion.household_id == household_id).all()
+        .filter(ChoreCompletion.household_id == household_id)\
+        .order_by(asc(ChoreCompletion.done_on)).all()
         # .filter(
         #         ChoreCompletion.done_on > func.now() - (literal_column("interval '1 day'") * Chore.repeat_schedule))
     
@@ -346,13 +347,12 @@ def populate_schema():
             resident_id=1,
             household_id=1
         )
+        db.session.add(chore)
+        db.session.commit()
         chores.append(chore)
-    db.session.add_all(chores)
-    db.session.commit()
 
     # === 2. Generate Random Chore Completions ===
 
-    chore_completions = []
     for i in range(5):
         chore = random.choice(chores)
         days_ago_done = random.randint(0, 90)
@@ -367,8 +367,7 @@ def populate_schema():
             done_on=done_on,
             deadline=deadline
         )
-        chore_completions.append(completion)
-        db.session.add_all(chore_completions)
+        db.session.add(completion)
         db.session.commit()
 
 

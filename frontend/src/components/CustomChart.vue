@@ -26,7 +26,7 @@ props.chores.forEach(chore => {
 
     const monthNumber = (dateObj.getMonth() + 1).toString().padStart(2, '0')
 
-    if (displayedMonths.hasOwnProperty(monthNumber)) {
+    if (displayedMonths.has(monthNumber)) {
         displayedMonths.set(monthNumber, displayedMonths.get(monthNumber) + 1) 
     } else {
         displayedMonths.set(monthNumber, 1)
@@ -42,9 +42,8 @@ let countRange = Array.from({ length: maxCount }, (_, i) => maxCount - i).revers
 const MAX_DISPLAYED_KEYS = 8
 let [keys, excess]: [number[], number] = shortenArrayBySize(countRange, MAX_DISPLAYED_KEYS)
 
-const CHART_HEIGHT = 10
-
 // used to determine the height of bars/position of keys on the chart.
+const CHART_HEIGHT = 10
 const scale = CHART_HEIGHT / countRange.length
 // [(height, displayedValue, month)]
 
@@ -56,10 +55,10 @@ const lowestKey = keys[0]
 // checks for edge cases where the currentValue is lower than the lowest key.
 // In which case 1 is assigned for the height.
 
-
 displayedMonths.forEach((currentValue, key) => {
     let height = currentValue;
-    if (excess) {
+    if (excess > 0) {
+        console.log(excess)
         height = currentValue - excess
     }
 
@@ -83,7 +82,7 @@ let [displayedHeightValues, overflow] = shortenArrayBySize(calculatedHeightValue
 // this leads to some funy graphs where 2 is higher than 7
 // also if the value displayed on theg graph is lower than the lowest number displayed, how should it be done ?
 // In either cases, their value to be dispayed with will be set to 1.
-
+console.log(displayedHeightValues)
 </script>
 
 <template>
