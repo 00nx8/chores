@@ -32,8 +32,8 @@ const routes = [
     name: 'createChore',
     component: () => import('./pages/CreateChore.vue')
   }, {
-    name: 'profile',
-    path: '/profile',
+    name: 'user',
+    path: '/user/:id?',
     component: () => import('./pages/ProfilePage.vue'),
     beforeEnter: (to, from, next) => {
       if (!cookies.get('token')) {

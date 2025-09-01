@@ -2,34 +2,48 @@
 
 import CustomChart from '@/components/CustomChart.vue';
 import { userRequest } from '@/components/userRequest';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { Household, User } from '@/components/interface';
+import ResidentListView from '@/components/ResidentListView.vue';
+import { useRoute, useRouter } from 'vue-router';
 
-// TODO:
-// for this you need to figure out the deadlines for the chores.
-// on time chart
+const route = useRoute()
+const router = useRouter()
 
 const user = ref<User>({} as User)
 const household = ref<Household>({} as Household)
 const chores = ref([])
+const residents = ref([])
 
-const error =  ref('')
-
-userRequest('/user', {method:"GET"})
-.then(res => {
+const fetchUserData = async () => {
+    const url = route.params.id ? `/user/${route.params.id}` : '/user'
+    const res = await userRequest(url, {method:"GET"})
     if (res.error) {
-        error.value = res.error
+        router.push('/user')
         return
     }
     
+    console.log('asd')
     household.value = res.household
     user.value = res.user
 
-    userRequest(`/household/${household.value.id}/done`, {method: "GET"}).then(res => {
-        chores.value = res.chores
-    })
+    const [doneRes, residentRes] = await Promise.all([
+            userRequest(`/household/${household.value.id}/done`, {method: "GET"}),
+            userRequest(`/household/${household.value.id}/residents`, {method: "GET"})
+    ])
 
-})
+    chores.value = doneRes.chores
+    residents.value = residentRes.residents
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    fetchUserData()
+  },
+  { immediate: true }
+)
+
 </script>
 
 <template>
@@ -39,6 +53,22 @@ userRequest('/user', {method:"GET"})
                 <h1 style="text-align: center;">Hello {{ user.name }}</h1>
                 <section v-if="Object.keys(household).length">
                     <h2 style="text-align: center;">{{household.name}}</h2>
+                    <section v-if="chores.length" class="statsCont">
+                        <CustomChart 
+                            :title="'Chores done'"
+                            :tagLeft="'No. of Chores'"
+                            :tagBottom="'Month'"
+                            :chores="chores"
+                            />
+                    </section>
+                    <section style="padding-top: 1rem;">
+                        <h2>Overview</h2>
+                        <section>
+                            <h3>Residents</h3>
+                            <ResidentListView :residents="residents" :user="user"/>       
+                        </section>
+
+                    </section>
                 </section>
                 <section v-else class="noHouseholdCont">
                     You are not part of a household. <br>Join or create one!
@@ -50,18 +80,6 @@ userRequest('/user', {method:"GET"})
                 </section>
             </section>
 
-            <section v-if="chores.length" class="statsCont">
-                <CustomChart 
-                    :title="'Overview'"
-                    :tagLeft="'Chores Done'"
-                    :tagBottom="'Month'"
-                    :chores="chores"
-                    />
-            </section>
-
-            <section style="padding-top: 1rem;">
-                <h2>Household</h2>
-            </section>
         </section>
         
     </section>

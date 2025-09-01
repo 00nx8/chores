@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router';
 </script>
 <template>
     <nav>
-        <RouterLink :to="{name: 'profile'}">
+        <RouterLink :to="{name: 'user', params: {}}">
            Profile
         </RouterLink>
         <RouterLink :to="{name: 'household'}">

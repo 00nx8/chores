@@ -11,13 +11,6 @@ from dotenv import dotenv_values
 import jwt
 from datetime import datetime, timedelta
 # TODO:
-# figure out deadline tracking for each chore.
-    # How to keep track of on time 
-    # make a table that stores chore_id, resident_id, deadline, chore.done_on
-    # can be referenced/updated when needed. 
-    # deadline can serve as a period to query by.
-
-
 # create house overview
     # add an option to view residents, with delete option
 
@@ -44,24 +37,6 @@ db.init_app(app)
 mapper_registry = registry()
 CORS(app)
 mapper_registry.configure()
-
-
-CHORES_LIST = [
-    ('Vacuum', 'False'),
-    ('Clean the Toilet', 'False'),
-    ('Mop the floor', 'False'),
-    ('Clean the Fridge', 'True'),
-    ('Kitchen sink', 'False'),
-    ('Take out the bins', 'False'),
-    ('Clean the stove', 'False'),
-    ('Wipe kitchen counter', 'False'),
-    ('Clean the shelf/sink in the shower', 'False'),
-    ('Shower Gutter', 'False'),
-    ('Wipe off the bar', 'False'),
-    ('Wipe off coffee tables,', 'False'),
-    ('Beat the carpets', 'True'),
-    ('Clear belongings out of communal areas', 'False'),
-]
 
 def auth_jwt(func):
     @functools.wraps(func)
@@ -113,6 +88,7 @@ def login():
     return {'status': 'ok', 'user': user.to_dict(), 'token': token}, 200
 
 
+
 @app.route('/register', methods=['POST'])
 def register():
     req_body = json.loads(request.data.decode())
@@ -127,10 +103,10 @@ def register():
     
     hashed_password = bcrypt.generate_password_hash(req_body['password']).decode('utf-8')
 
-    db.session.add(Resident(name=req_body['username'], password=hashed_password))
+    new_user = Resident(name=req_body['username'], password=hashed_password)
+
+    db.session.add(new_user)
     db.session.commit()
-    
-    new_user = db.session.query(Resident).filter(Resident.name == req_body['username']).first()
     
     return {'status': "ok", 'user': new_user.to_dict()}, 200
 
@@ -173,7 +149,6 @@ def mark_chore_done(chore_id, **kwargs):
     db.session.add(completion)
     db.session.commit()
     return {'status': 'ok', 'chore': chore.to_dict(), 'completion': completion.to_dict()}
-
 
 
 @app.route('/household/<int:household_id>/chore', methods=["GET"])
@@ -283,12 +258,26 @@ def associate_household(**kwargs):
         }
 
 
+@app.route('/user/<int:id>')
+@auth_jwt
+def get_resident_with_id(id, **kwargs):
+    user = db.session.query(Resident).filter(Resident.id == id).first()
+    if not user:
+        print(user)
+        return {'error': 'user was not found.'}, 404
+    household = user.household
+    chores = db.session.query(Chore).filter(Chore.resident_id == user.id).all()
+    
+    return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict() if household else {}}
+
+    
+
 @app.route('/user', methods=["GET"])
 @auth_jwt
 def get_current_user(**kwargs):
     user = kwargs.get('user')
     if not user:
-        return {'error': 'Token passed authentication but no user was found.'}
+        return {'error': 'user was not found.'}, 404
     household = user.household
     chores = db.session.query(Chore).filter(Chore.resident_id == user.id).all()
     

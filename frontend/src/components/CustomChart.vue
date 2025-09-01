@@ -18,25 +18,33 @@ function shortenArrayBySize(array: any[], size: number): [any[], number] {
 }
 
 
-const displayedMonths = new Map()
+const displayedMonths = new Map([
+    [1, 6],
+    [2, 7],
+    [3, 16],
+    [4, 12],
+    [5, 1]
+])
+
+
 // chores is a list of objects with information about when a chore was done. 
 // this adds up how many chores were done in a given month
-props.chores.forEach(chore => {
-    const dateObj = new Date(chore.done_on)
+// props.chores.forEach(chore => {
+//     const dateObj = new Date(chore.done_on)
 
-    const monthNumber = (dateObj.getMonth() + 1).toString().padStart(2, '0')
+//     const monthNumber = (dateObj.getMonth() + 1).toString().padStart(2, '0')
 
-    if (displayedMonths.has(monthNumber)) {
-        displayedMonths.set(monthNumber, displayedMonths.get(monthNumber) + 1) 
-    } else {
-        displayedMonths.set(monthNumber, 1)
-    }
-})
+//     if (displayedMonths.has(monthNumber)) {
+//         displayedMonths.set(monthNumber, displayedMonths.get(monthNumber) + 1) 
+//     } else {
+//         displayedMonths.set(monthNumber, 1)
+//     }
+// })
 
 // gets the highest amount in the dataset
 const maxCount = Math.max(...Array.from(displayedMonths.values()))
 // generates a list from 1 to the highest amount
-let countRange = Array.from({ length: maxCount }, (_, i) => maxCount - i).reverse()
+let countRange = Array.from({ length: maxCount + 1 }, (_, i) => maxCount - i).reverse()
 
 // if the number keys generated is higher then the allowed amount, it removes the excess from low->high
 const MAX_DISPLAYED_KEYS = 8
@@ -58,16 +66,15 @@ const lowestKey = keys[0]
 displayedMonths.forEach((currentValue, key) => {
     let height = currentValue;
     if (excess > 0) {
-        console.log(excess)
         height = currentValue - excess
     }
 
     if (currentValue < lowestKey) {
         height = 1;
     }
-
+    // TODO: test height with larger dataset
     calculatedHeightValues.push([
-        height || currentValue,
+        height + .5,
         currentValue,
         key,
     ]);
@@ -77,12 +84,7 @@ const MAX_ALLOWED_BARS = 10
 
 let [displayedHeightValues, overflow] = shortenArrayBySize(calculatedHeightValues, MAX_ALLOWED_BARS)
 
-// TODO
-// if the value in the month is lower than the excess i.e val - excess = <0 then the height will be determined with a negative integer.
-// this leads to some funy graphs where 2 is higher than 7
-// also if the value displayed on theg graph is lower than the lowest number displayed, how should it be done ?
-// In either cases, their value to be dispayed with will be set to 1.
-console.log(displayedHeightValues)
+
 </script>
 
 <template>
@@ -92,7 +94,7 @@ console.log(displayedHeightValues)
             <div class="bars">
                 <div 
                     v-for="[height, displayedValue, month], i in displayedHeightValues"
-                    :style="{left: `${i * 1.75}rem`, height: `${height * scale}rem`}"
+                    :style="{left: `${i * 1.75}rem`, height: `${height * scale }rem`}"
                     class="bar"
                     :key=i>
                     <p class="month">{{ month }}</p>
