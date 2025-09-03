@@ -7,7 +7,7 @@ const router = useRouter()
 const action = ref('')
 
 function confirmAction() {
-
+    action.value = ''
 }
 
 </script>
