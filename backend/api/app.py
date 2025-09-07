@@ -309,6 +309,17 @@ def get_done_chores(household_id, **kwargs):
     
     return {'status': 'ok', 'chores': [chore.to_dict() for chore in recent_done_chores]}
 
+@app.route('/chore/<int:chore_id>/assign', methods=["POST"])
+@auth_jwt
+def assign_chore_to_user(chore_id: int, **kwargs):
+    req_body = json.loads(request.data.decode())
+
+    user_id = req_body.get('user_id')
+    chore = db.session.query(Chore).filter(chore_id == Chore.id).first()
+    chore.resident_id = user_id
+
+    db.session.commit()
+    return {'status': 'ok', 'chore': chore.to_dict()}
 
 def populate_schema():
     import random

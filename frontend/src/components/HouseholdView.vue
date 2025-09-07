@@ -4,12 +4,14 @@ import ChoreComponent from './ChoreComponent.vue';
 import HiddenButtons from './HiddenButtons.vue';
 import type { Chore } from './interface';
 import { userRequest } from './userRequest';
-import { reactive, ref, watch } from 'vue';
+import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
-
+import PopUp from './PopUp.vue';
 
 // TODO: 
 // when selecting done chores either present differnet options or not select them.
+
+const popup = ref(false)
 
 const toDo = ref([])
 const done = ref([])
@@ -17,11 +19,14 @@ const selectedChores = ref([])
 const props = defineProps<{
     household: {[key:string]: string}
 }>()
+const residents = ref([])
+const selectedUserId = ref()
 
 Promise.all([
     userRequest(`/household/${props.household.id}/chore`, {method: "GET"}),
-    userRequest(`/household/${props.household.id}/done`, {method: "GET"})
-]).then(([allRes, doneRes]) => {
+    userRequest(`/household/${props.household.id}/done`, {method: "GET"}),
+    userRequest(`/household/${props.household.id}/residents`, {method: "GET"})
+]).then(([allRes, doneRes, residentsRes]) => {
     const allChores = allRes.chores
     const doneChoresMap = new Map()
 
@@ -38,6 +43,8 @@ Promise.all([
         }))
 
     toDo.value = allChores.filter(chore => !doneChoresMap.has(chore.id))
+
+    residents.value = residentsRes.residents
 
 })
 
@@ -69,7 +76,8 @@ async function buttonCall(action: string) {
             selectedChores.value = []
             break
         case ('re-assign'):
-            // TODO
+            popup.value = true
+            break
         case ('complete'):
                 const completionPromises = selectedChores.value.map(async (chore) => {
                     const res = await userRequest(`/chore/${chore.id}`, { method: 'POST' })
@@ -90,6 +98,17 @@ async function buttonCall(action: string) {
     }
 }
 
+function assign() {
+
+    selectedChores.value.forEach(chore => {
+        userRequest(`/chore/${chore.id}/assign`, {
+            method: "POST",
+            body: {
+                user_id: selectedUserId.value
+            }
+        })
+    })
+}
 
 </script>
 
@@ -112,7 +131,6 @@ async function buttonCall(action: string) {
         <ChoreComponent @chore-selected="([chore, isSelected]) => updateChore(chore, isSelected) " :key="chore.id" :status="'todo'" v-for="chore in toDo" :chore="chore" />
     </section>
     <section v-else>
-        
         <p
             v-if="done.length"
             style="text-align: center;"
@@ -144,6 +162,18 @@ async function buttonCall(action: string) {
         ]" />
 
     </section>
+    <!-- TODO: add functionality so it re assigns chore, then closes popup. -->
+    <PopUp v-if="popup"
+        title="Re-assign"
+        @close="popup = false"
+        @assign=""
+        >
+        <select v-model="selectedUserId" name="user">
+            <option v-for="resident in residents" :value="resident.id">{{ resident.name }}</option>
+        </select>
+        <button @click="assign">Re-assign</button>
+    </PopUp>
+
 </template>
 
 <style scoped>
