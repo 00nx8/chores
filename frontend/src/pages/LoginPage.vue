@@ -16,8 +16,6 @@ const userInfo = reactive({
 
 const errors = ref([])
 
-
-
 function validateForm() {
     errors.value = []
     if (!userInfo.username || !userInfo.password) {

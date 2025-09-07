@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 # TODO:
 # create house overview
     # add an option to view residents, with delete option
+    # When no household, requests should not be sent to the backend about household on profile page.
+    # When leaving household, redirect is done to household page, but chores from household are still displayed
 
 # create profile page
     # overview of all the todos for this person
@@ -69,6 +71,9 @@ def login():
     Requires body/password to be attached to the request body. 
     """
     req_body = json.loads(request.data.decode())
+
+    if not req_body['username'] or not req_body['password']:
+        return {'status': 'error', 'error': 'no username or password provided'}, 400
 
     user = db.session.query(Resident).filter(Resident.name == req_body['username']).first()
 
@@ -270,7 +275,32 @@ def get_resident_with_id(id, **kwargs):
     
     return {'status':'ok', "user": user.to_dict(), "chores": [chore.to_dict() for chore in chores], "household": household.to_dict() if household else {}}
 
-    
+@app.route('/user/household', methods=['PUT'])
+@auth_jwt
+def change_user_household(**kwargs):
+    req_body = json.loads(request.data.decode())
+
+    household_id = req_body['household_id']
+
+    if household_id is None or not isinstance(household_id, int):
+        return {'status': 'error', 'error': f'{household_id} is not valid id'}
+
+    current_user = kwargs.get('user')
+
+    user_model = db.session.query(Resident).filter(Resident.id == current_user.id).first()
+    print(household_id)
+
+    if household_id == 0:
+        user_model.household_id = None
+    else:
+        household = db.session.query(Household).filter(Household.id == household_id).first()
+        if not household:
+            return {'status': 'error', 'error': 'Household not found'}, 404
+        user_model.household_id = household_id
+
+    db.session.commit()
+
+    return {'status': 'ok', 'user': user_model.to_dict() }
 
 @app.route('/user', methods=["GET"])
 @auth_jwt
@@ -288,7 +318,12 @@ def get_current_user(**kwargs):
 def delete_chore(**kwargs):
     req_body = json.loads(request.data.decode())
     
-    delete_count = db.session.query(Chore).filter(Chore.id == req_body['choreId']).delete()
+    chore_id = req_body.get('chore_id')
+
+    if not chore_id:
+        return {'status': 'error', 'error': 'No chore id was provided'}, 401
+
+    delete_count = db.session.query(Chore).filter(Chore.id == chore_id).delete()
 
     db.session.commit()
 
@@ -315,7 +350,15 @@ def assign_chore_to_user(chore_id: int, **kwargs):
     req_body = json.loads(request.data.decode())
 
     user_id = req_body.get('user_id')
+
+    if not user_id:
+        return {'status': 'error', 'error': 'no user id provided'}, 400
+
     chore = db.session.query(Chore).filter(chore_id == Chore.id).first()
+
+    if not chore:
+        return {'status': 'error', 'error': 'no chore with id provided'}, 400
+
     chore.resident_id = user_id
 
     db.session.commit()

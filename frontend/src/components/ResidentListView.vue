@@ -14,6 +14,7 @@ function confirmAction() {
 
 <template>
 <section>
+    <!-- TODO -->
     <div v-for="resident in props.residents">
         <p>{{ resident.name }}</p>
         <div>

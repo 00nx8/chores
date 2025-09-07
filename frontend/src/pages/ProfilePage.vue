@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-
 import CustomChart from '@/components/CustomChart.vue';
 import { userRequest } from '@/components/userRequest';
 import { ref, watch } from 'vue';
 import type { Household, User } from '@/components/interface';
 import ResidentListView from '@/components/ResidentListView.vue';
 import { useRoute, useRouter } from 'vue-router';
+import HiddenButtons from '@/components/HiddenButtons.vue';
+import Cookies from 'universal-cookie';
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +15,8 @@ const user = ref<User>({} as User)
 const household = ref<Household>({} as Household)
 const chores = ref([])
 const residents = ref([])
+
+const cookies = new Cookies()
 
 const fetchUserData = async () => {
     const url = route.params.id ? `/user/${route.params.id}` : '/user'
@@ -43,6 +46,27 @@ watch(
   },
   { immediate: true }
 )
+
+function buttonCall( action: string ) {
+    switch (action) {
+        case('Sign out'):
+            cookies.remove('token')
+            router.push('/')
+        case('Leave household'):
+
+            localStorage.removeItem('household')
+
+            userRequest('/user/household', {
+                method: 'PUT',
+                body: {
+                    household_id: 0
+                }
+            }).then(res => {
+                household.value = null
+            })
+            router.push('/')
+    }
+}
 
 </script>
 
@@ -81,7 +105,10 @@ watch(
             </section>
 
         </section>
-        
+        <HiddenButtons @action="buttonCall" :buttons="[
+            {icon: 'https://api.iconify.design/mdi/logout.svg?color=white', action: 'Sign out'},
+            {icon: 'https://api.iconify.design/mdi/home-export-outline.svg?color=white', action: 'Leave household'}
+        ]" />
     </section>
 </template>
 

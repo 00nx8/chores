@@ -18,28 +18,22 @@ function shortenArrayBySize(array: any[], size: number): [any[], number] {
 }
 
 
-const displayedMonths = new Map([
-    [1, 6],
-    [2, 7],
-    [3, 16],
-    [4, 12],
-    [5, 1]
-])
+const displayedMonths = new Map()
 
 
 // chores is a list of objects with information about when a chore was done. 
 // this adds up how many chores were done in a given month
-// props.chores.forEach(chore => {
-//     const dateObj = new Date(chore.done_on)
+props.chores.forEach(chore => {
+    const dateObj = new Date(chore.done_on)
 
-//     const monthNumber = (dateObj.getMonth() + 1).toString().padStart(2, '0')
+    const monthNumber = (dateObj.getMonth() + 1).toString().padStart(2, '0')
 
-//     if (displayedMonths.has(monthNumber)) {
-//         displayedMonths.set(monthNumber, displayedMonths.get(monthNumber) + 1) 
-//     } else {
-//         displayedMonths.set(monthNumber, 1)
-//     }
-// })
+    if (displayedMonths.has(monthNumber)) {
+        displayedMonths.set(monthNumber, displayedMonths.get(monthNumber) + 1) 
+    } else {
+        displayedMonths.set(monthNumber, 1)
+    }
+})
 
 // gets the highest amount in the dataset
 const maxCount = Math.max(...Array.from(displayedMonths.values()))
@@ -100,11 +94,6 @@ let [displayedHeightValues, overflow] = shortenArrayBySize(calculatedHeightValue
                     <p class="month">{{ month }}</p>
                     <p>{{ displayedValue }}</p>
                 </div>
-                <!-- <div
-                    v-for="(month, i) in Object.keys(displayedMonths)"
-                    class="bar"
-                    :style="{left: `${i * 2}rem`, height: `${(displayedMonths[month] - -excess) * scale}rem`}"
-                 >{{displayedMonths[month]}}</div> -->
             </div>
             <div>
                 <div class="labelLeft">
